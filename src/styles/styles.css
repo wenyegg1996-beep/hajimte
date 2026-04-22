@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
 /* ============================================================
    哈基米助手 · 现代设计系统 (Modern Design System)
    灵感：GitHub Primer / Linear / Tailwind UI
@@ -2078,4 +2080,514 @@ html, body {
   .venue-sidebar { width: 100%; height: 180px; border-right: none; border-bottom: 1px solid var(--border); }
   .venue-list { flex-direction: row; overflow-x: auto; overflow-y: hidden; }
   .venue-item { min-width: 160px; flex-shrink: 0; }
+}
+
+/* ============================================================
+   2026 UI Refresh · Editorial Control Room
+   保持布局不变，仅重写视觉层
+   ============================================================ */
+
+:root {
+  --bg: #f3efe6;
+  --bg-soft: #ebe3d4;
+  --surface: rgba(255, 250, 242, 0.92);
+  --surface-alt: rgba(247, 239, 227, 0.8);
+  --border: rgba(40, 53, 71, 0.12);
+  --border-strong: rgba(40, 53, 71, 0.24);
+  --ink-900: #142033;
+  --ink-700: #304158;
+  --ink-500: #66758a;
+  --ink-400: #8995a6;
+  --brand: #127a88;
+  --brand-light: #d7eef0;
+  --brand-dark: #0d5761;
+  --brand-deep: #0d3340;
+  --brand-grad: linear-gradient(135deg, #127a88 0%, #1f5f8b 48%, #b76b32 100%);
+  --brand-grad-soft: linear-gradient(135deg, rgba(18, 122, 136, 0.12), rgba(183, 107, 50, 0.12));
+  --shadow-sm: 0 10px 24px -22px rgba(15, 20, 30, 0.65);
+  --shadow: 0 24px 48px -32px rgba(15, 20, 30, 0.32);
+  --shadow-md: 0 26px 60px -34px rgba(15, 20, 30, 0.38);
+  --shadow-lg: 0 34px 80px -40px rgba(15, 20, 30, 0.42);
+  --shadow-xl: 0 40px 100px -48px rgba(15, 20, 30, 0.52);
+  --shadow-brand: 0 18px 42px -28px rgba(18, 122, 136, 0.5);
+}
+
+html, body {
+  font-family: "IBM Plex Sans", "PingFang SC", "Microsoft YaHei", sans-serif;
+  background:
+    radial-gradient(900px 420px at 0% 0%, rgba(18, 122, 136, 0.09), transparent 60%),
+    radial-gradient(760px 420px at 100% 100%, rgba(183, 107, 50, 0.1), transparent 60%),
+    linear-gradient(180deg, #f8f4ec 0%, #f1ebdf 100%);
+  color: var(--ink-700);
+}
+
+h1, h2, h3, .login-card__title, .app-brand, .tpl-editor-title, .venue-modal-title, .tpl-list-head, .panel-head {
+  font-family: "Fraunces", "STSong", serif;
+}
+
+.hajimi-shell {
+  position: relative;
+  background:
+    radial-gradient(780px 320px at 15% -10%, rgba(18, 122, 136, 0.16), transparent 60%),
+    radial-gradient(740px 360px at 88% 6%, rgba(183, 107, 50, 0.12), transparent 58%),
+    linear-gradient(180deg, #efe7d8 0%, #f6f1e7 18%, #f4efe6 100%);
+}
+
+.hajimi-shell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.32;
+  background-image:
+    linear-gradient(rgba(20, 32, 51, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(20, 32, 51, 0.03) 1px, transparent 1px);
+  background-size: 28px 28px;
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.65), transparent 78%);
+}
+
+.app-main,
+.workspace-panel,
+.bet-workspace {
+  position: relative;
+  background:
+    linear-gradient(180deg, rgba(255, 250, 242, 0.66), rgba(248, 242, 232, 0.92)),
+    repeating-linear-gradient(135deg, rgba(20, 32, 51, 0.015) 0, rgba(20, 32, 51, 0.015) 1px, transparent 1px, transparent 18px);
+}
+
+.app-header {
+  margin: 14px 14px 0;
+  padding: 14px 18px !important;
+  border: 1px solid rgba(221, 210, 190, 0.35);
+  border-radius: 26px;
+  background:
+    linear-gradient(135deg, rgba(17, 29, 47, 0.95) 0%, rgba(25, 46, 71, 0.92) 58%, rgba(54, 48, 44, 0.9) 100%);
+  box-shadow: 0 32px 60px -40px rgba(12, 18, 28, 0.85);
+  backdrop-filter: blur(22px);
+}
+
+.app-brand {
+  gap: 12px;
+  color: #f7f0e5;
+  letter-spacing: 0.02em;
+  font-size: 20px;
+}
+
+.app-brand img {
+  width: 38px;
+  height: 38px;
+  padding: 5px;
+  border-radius: 14px;
+  background: rgba(255, 247, 233, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.tab-pills {
+  padding: 4px;
+  border-radius: 999px;
+  background: rgba(255, 250, 242, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.tab-pill,
+.tool-btn,
+.btn-icon-only {
+  border-radius: 999px;
+}
+
+.tab-pill {
+  min-height: 38px;
+  color: rgba(247, 240, 229, 0.72);
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.tab-pill:hover {
+  color: #fff7ea;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.tab-pill.active {
+  color: #132131;
+  background: linear-gradient(135deg, #f8f1e4 0%, #efdcc3 100%);
+  border-color: transparent;
+  box-shadow: 0 10px 24px -16px rgba(0, 0, 0, 0.7);
+}
+
+.tool-btn,
+.btn-icon-only {
+  background: rgba(255, 250, 242, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(247, 240, 229, 0.76);
+  backdrop-filter: blur(10px);
+}
+
+.tool-btn:hover,
+.btn-icon-only:hover {
+  background: rgba(255, 250, 242, 0.16);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.tool-btn.active,
+.tool-btn.accent-amber.active,
+.tool-btn.accent-emerald.active,
+.tool-btn.accent-rose.active,
+.tool-btn.accent-sky.active,
+.tool-btn.accent-violet.active {
+  color: #12202d;
+  background: linear-gradient(135deg, #f8f0e3 0%, #d7edf0 100%);
+  box-shadow: 0 14px 28px -20px rgba(11, 46, 58, 0.9);
+}
+
+.user-badge {
+  background: rgba(255, 247, 233, 0.12);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #f8efe2;
+}
+
+.user-avatar {
+  background: linear-gradient(135deg, #d6eef0 0%, #c9874e 100%);
+  color: #102030;
+}
+
+.status-bar {
+  margin: 0 14px 14px;
+  padding: 12px 16px 14px;
+  border-radius: 22px;
+  border: 1px solid rgba(26, 41, 58, 0.08);
+  background: linear-gradient(180deg, rgba(255, 250, 242, 0.95), rgba(248, 242, 233, 0.92));
+  box-shadow: 0 24px 48px -34px rgba(15, 20, 30, 0.4);
+}
+
+.scripts-sidebar,
+.chat-panel,
+.composer-panel,
+.panel,
+.tpl-list-panel,
+.tpl-editor,
+.workspace-panel--accounts > div:nth-child(2) table,
+.workspace-panel--training .flex-1 > div,
+.bet-query-card,
+.tracker-dialog,
+.dialog-card {
+  background:
+    linear-gradient(180deg, rgba(255, 250, 242, 0.96), rgba(250, 244, 235, 0.94));
+  border: 1px solid rgba(36, 51, 68, 0.1);
+  box-shadow: 0 26px 64px -42px rgba(20, 28, 40, 0.55);
+}
+
+.scripts-sidebar,
+.chat-panel,
+.composer-panel,
+.panel,
+.tpl-list-panel,
+.tpl-editor {
+  border-radius: 26px;
+}
+
+.scripts-stage {
+  padding-top: 18px;
+}
+
+.scripts-sidebar {
+  background:
+    linear-gradient(180deg, rgba(255, 250, 242, 0.95), rgba(244, 236, 225, 0.92)),
+    linear-gradient(120deg, rgba(18, 122, 136, 0.05), transparent 32%);
+}
+
+.scripts-sidebar > div:first-child,
+.images-toolbar,
+.workspace-panel--accounts > div:first-child,
+.workspace-panel--data > div:first-child,
+.workspace-panel--training > div:first-child,
+.tpl-toggle-bar {
+  background:
+    linear-gradient(135deg, rgba(24, 40, 60, 0.96), rgba(27, 50, 73, 0.92));
+  color: #f6efe3;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.workspace-panel--accounts > div:first-child span,
+.workspace-panel--data > div:first-child,
+.workspace-panel--training > div:first-child,
+.images-toolbar {
+  color: #f6efe3;
+}
+
+.main-input,
+.prompt-editor,
+.notice-textarea,
+.tpl-input,
+.venue-name-input,
+.venue-rules-textarea,
+.login-card__input {
+  background: rgba(255, 251, 245, 0.96);
+  border: 1px solid rgba(20, 32, 51, 0.12);
+  border-radius: 18px;
+  color: #172335;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.main-input:focus,
+.prompt-editor:focus,
+.notice-textarea:focus,
+.tpl-input:focus,
+.venue-rules-textarea:focus,
+.login-card__input:focus {
+  border-color: rgba(18, 122, 136, 0.45);
+  box-shadow:
+    0 0 0 4px rgba(18, 122, 136, 0.11),
+    0 14px 30px -22px rgba(18, 122, 136, 0.6);
+}
+
+.btn-primary,
+.tpl-save-btn,
+.venue-save-btn,
+.login-card__submit {
+  background: linear-gradient(135deg, #17304a 0%, #146b79 58%, #bb7239 100%);
+  color: #fffaf1;
+  border-radius: 999px;
+  box-shadow: 0 18px 28px -20px rgba(20, 48, 74, 0.78);
+}
+
+.btn-primary:hover,
+.tpl-save-btn:hover,
+.venue-save-btn:hover,
+.login-card__submit:hover {
+  box-shadow: 0 24px 36px -22px rgba(20, 48, 74, 0.82);
+}
+
+.btn-secondary,
+.tpl-mode-pill.mng {
+  background: rgba(255, 248, 238, 0.9);
+  border-color: rgba(20, 32, 51, 0.12);
+  color: #1a2b40;
+}
+
+.list-card,
+.tpl-card,
+.tracker-modal-item,
+.image-card {
+  background:
+    linear-gradient(180deg, rgba(255, 251, 246, 0.97), rgba(245, 238, 229, 0.92));
+  border: 1px solid rgba(20, 32, 51, 0.08);
+  border-radius: 22px;
+  box-shadow: 0 18px 42px -34px rgba(20, 28, 40, 0.55);
+}
+
+.list-card:hover,
+.tpl-card:hover,
+.image-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(18, 122, 136, 0.2);
+  box-shadow: 0 22px 48px -34px rgba(18, 122, 136, 0.34);
+}
+
+.list-card.is-active,
+.tpl-card.is-active {
+  background:
+    linear-gradient(135deg, rgba(214, 238, 240, 0.78), rgba(255, 244, 231, 0.92));
+  border-color: rgba(18, 122, 136, 0.24);
+}
+
+.chat-panel {
+  background:
+    radial-gradient(560px 260px at 100% 0%, rgba(18, 122, 136, 0.08), transparent 60%),
+    linear-gradient(180deg, rgba(255, 251, 245, 0.96), rgba(246, 239, 229, 0.94));
+}
+
+.composer-panel {
+  background:
+    linear-gradient(180deg, rgba(255, 249, 241, 0.98), rgba(250, 244, 235, 0.96));
+}
+
+.intent-badge {
+  border: 1px solid rgba(20, 32, 51, 0.07);
+  box-shadow: 0 14px 24px -22px rgba(20, 32, 51, 0.55);
+}
+
+.workspace-panel--images .grid,
+.workspace-panel--data .grid,
+.workspace-panel--notice .grid,
+.workspace-panel--training .flex-1 {
+  position: relative;
+  z-index: 1;
+}
+
+.panel-head,
+.tpl-list-head,
+.tpl-editor-head {
+  background:
+    linear-gradient(135deg, rgba(20, 32, 51, 0.95), rgba(22, 62, 83, 0.92));
+  color: #f8efe2;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.panel-head button,
+.tpl-list-head button,
+.tpl-editor-head button {
+  color: #dcebf0;
+}
+
+.tpl-select-wrap,
+.tpl-preview-card,
+.tpl-edit-wrap-inner,
+.venue-progress,
+.venue-dropzone,
+.widget-box,
+.ticket-card,
+.match-item {
+  border-radius: 22px;
+}
+
+.tpl-select-wrap,
+.tpl-preview-card,
+.tpl-edit-wrap-inner {
+  background:
+    linear-gradient(180deg, rgba(255, 250, 242, 0.96), rgba(246, 239, 228, 0.92));
+  border-color: rgba(20, 32, 51, 0.1);
+}
+
+.tpl-select-icon,
+.tpl-editor-title-icon,
+.venue-dropzone-icon,
+.login-card__logo-wrap {
+  background: linear-gradient(135deg, #163b55 0%, #1f7280 58%, #bf7b41 100%);
+  box-shadow: 0 18px 30px -22px rgba(22, 59, 85, 0.8);
+}
+
+.workspace-panel--notice .panel,
+.workspace-panel--training .bg-white.rounded-xl,
+.workspace-panel--accounts table,
+.tracker-dialog,
+.dialog-card {
+  overflow: hidden;
+}
+
+.ticket-card {
+  background:
+    linear-gradient(180deg, rgba(255, 251, 246, 0.98), rgba(248, 241, 231, 0.95));
+  border-color: rgba(20, 32, 51, 0.12);
+}
+
+.ticket-status-bar {
+  font-family: "IBM Plex Mono", monospace;
+  letter-spacing: 0.04em;
+}
+
+.ticket-card.is-win .ticket-status-bar {
+  background: linear-gradient(135deg, #8f4427, #bb7239);
+}
+
+.ticket-card.is-loss .ticket-status-bar {
+  background: linear-gradient(135deg, #0e5962, #127a88);
+}
+
+.ticket-card.is-pending .ticket-status-bar {
+  background: linear-gradient(135deg, #7b5a1f, #bf8c31);
+}
+
+.ticket-card.is-draw .ticket-status-bar {
+  background: linear-gradient(135deg, #38506d, #57789a);
+}
+
+.ticket-card.is-cancelled .ticket-status-bar {
+  background: linear-gradient(135deg, #575d66, #7a7f87);
+}
+
+.match-item,
+.summary-section,
+.bet-info-row,
+.tracker-modal-item {
+  background: rgba(255, 252, 247, 0.9);
+  border-color: rgba(20, 32, 51, 0.08);
+}
+
+.login-bg {
+  background:
+    radial-gradient(900px 500px at 15% 10%, rgba(17, 65, 83, 0.28), transparent 60%),
+    radial-gradient(800px 500px at 85% 90%, rgba(183, 107, 50, 0.22), transparent 58%),
+    linear-gradient(135deg, #151f2f 0%, #293f58 46%, #71533c 100%);
+}
+
+.login-card {
+  border: 1px solid rgba(255, 247, 233, 0.14);
+  background:
+    linear-gradient(180deg, rgba(18, 29, 45, 0.7), rgba(30, 43, 64, 0.78));
+  box-shadow: 0 40px 90px -38px rgba(4, 9, 18, 0.95);
+}
+
+.login-card__title {
+  color: #fff7ea;
+  font-size: clamp(32px, 4vw, 48px);
+}
+
+.dialog-shell {
+  background:
+    radial-gradient(500px 220px at 50% 0%, rgba(18, 122, 136, 0.16), transparent 65%),
+    rgba(17, 23, 33, 0.6);
+}
+
+.dialog-card {
+  border-radius: 28px;
+  border: 1px solid rgba(20, 32, 51, 0.12);
+}
+
+.dialog-card--compact {
+  max-width: 420px;
+}
+
+.dialog-card--form {
+  max-width: 460px;
+}
+
+.dialog-card--debug {
+  max-width: 920px;
+}
+
+.venue-modal,
+.tracker-dialog {
+  background:
+    linear-gradient(180deg, rgba(255, 250, 242, 0.98), rgba(244, 236, 226, 0.96));
+  border: 1px solid rgba(20, 32, 51, 0.1);
+  box-shadow: 0 40px 90px -48px rgba(16, 22, 32, 0.72);
+}
+
+.venue-modal-head {
+  background:
+    linear-gradient(135deg, rgba(17, 30, 46, 0.98), rgba(25, 61, 81, 0.95));
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(18, 122, 136, 0.58), rgba(183, 107, 50, 0.6));
+}
+
+textarea,
+pre,
+.font-mono,
+.ticket-footer-meta,
+.status-model-pill {
+  font-family: "IBM Plex Mono", "Menlo", monospace;
+}
+
+@media (max-width: 768px) {
+  .app-header {
+    margin: 10px 10px 0;
+    padding: 12px 14px !important;
+    border-radius: 22px;
+  }
+
+  .scripts-stage {
+    padding-top: 12px;
+  }
+
+  .scripts-sidebar,
+  .chat-panel,
+  .composer-panel,
+  .panel,
+  .tpl-list-panel,
+  .tpl-editor {
+    border-radius: 22px;
+  }
 }

@@ -1174,7 +1174,7 @@ ${accumulated ? accumulated.substring(0, 12000) : '(当前场馆无已有规则)
     if (!isAuthorized) return <LoginScreen onLogin={(user, role) => { localStorage.setItem(SESSION_KEY_TIME, Date.now().toString()); localStorage.setItem(SESSION_KEY_USER, user); localStorage.setItem(SESSION_KEY_ROLE, role); setCurrentUser(user); setUserRole(role); setIsAuthorized(true); setLoading(true); loadData(); }} />;
 
     return (
-      <div className="flex flex-col h-screen bg-slate-100 overflow-hidden fade-in pb-8">
+      <div className="hajimi-shell flex flex-col h-screen bg-slate-100 overflow-hidden fade-in pb-8">
       <div style={{ position: 'fixed', inset: 0, zIndex: 9999, pointerEvents: 'none', backgroundImage: wmBackground, backgroundRepeat: 'repeat' }} />
         
         {/* ======================= */}
@@ -1643,11 +1643,11 @@ ${accumulated ? accumulated.substring(0, 12000) : '(当前场馆无已有规则)
           </div>
         </header>
         
-         <main className="relative flex-1 overflow-hidden" style={{background:'#f6f8fc'}}>
+         <main className="app-main relative flex-1 overflow-hidden" style={{background:'#f6f8fc'}}>
            
            {/* ===== 账号管理模块 (仅 aratakito) ===== */}
            {activeTab === 'accounts' && currentUser === 'aratakito' && (
-               <div className="absolute inset-0 flex flex-col bg-zinc-50 overflow-hidden z-30">
+               <div className="workspace-panel workspace-panel--accounts absolute inset-0 flex flex-col bg-zinc-50 overflow-hidden z-30">
                    <div className="bg-white border-b border-zinc-200 px-4 py-2 flex items-center justify-between shrink-0 shadow-sm">
                        <span className="font-bold text-slate-700 flex items-center gap-2"><Icon d={PATHS.User} className="w-5 h-5 text-pink-500"/> 账号管理</span>
                        <div className="flex gap-2">
@@ -1692,7 +1692,7 @@ ${accumulated ? accumulated.substring(0, 12000) : '(当前场馆无已有规则)
 
            {/* ===== 公告管理模块 ===== */}
            {activeTab === 'notice' && (
-            <div className="absolute inset-0 flex flex-col">
+            <div className="workspace-panel workspace-panel--notice absolute inset-0 flex flex-col">
               <div className="tpl-toggle-bar shrink-0">
                 <div className="flex items-center gap-2 text-xs font-bold" style={{color:'var(--ink-700)'}}>
                   <span className="dot-grad" style={{width:8,height:8,borderRadius:'50%',background:'var(--brand-grad)'}}></span>
@@ -1847,8 +1847,8 @@ ${accumulated ? accumulated.substring(0, 12000) : '(当前场馆无已有规则)
 
           {/* ===== 话术/对话模块 (含多智能体) ===== */}
           {activeTab === 'scripts' && (
-             <div className="absolute inset-0 flex flex-col md:flex-row">
-              <section className="w-full md:w-1/3 md:min-w-[320px] bg-white border-b md:border-b-0 md:border-r border-zinc-200 flex flex-col shadow-lg z-10 shrink-0 h-[40%] md:h-full overflow-hidden">
+             <div className="workspace-panel workspace-panel--scripts absolute inset-0 flex flex-col md:flex-row">
+              <section className="scripts-sidebar w-full md:w-1/3 md:min-w-[320px] bg-white border-b md:border-b-0 md:border-r border-zinc-200 flex flex-col shadow-lg z-10 shrink-0 h-[40%] md:h-full overflow-hidden">
                   <div className="p-2 md:p-3 border-b border-zinc-100 flex gap-2">
                       <div className="relative w-1/3 max-w-[130px]">
                         <button onClick={() => setIsCategoryOpen(!isCategoryOpen)} className="w-full h-10 bg-white border border-slate-200 text-slate-700 text-xs rounded-lg px-3 py-2 pr-7 outline-none text-left truncate flex items-center justify-between relative hover:border-indigo-300 transition">
@@ -1900,8 +1900,8 @@ ${accumulated ? accumulated.substring(0, 12000) : '(当前场馆无已有规则)
                   </div>
               </section>
 
-              <section className="flex-1 p-2 md:p-6 flex flex-col gap-2 md:gap-4 min-h-0 relative" style={{background:'radial-gradient(700px 400px at 100% 0%, rgba(99,102,241,0.05), transparent 60%), radial-gradient(600px 400px at 0% 100%, rgba(236,72,153,0.04), transparent 60%), #f6f8fc'}}>
-                  <div className="flex-1 bg-white rounded-xl shadow-sm border border-zinc-200 flex flex-col overflow-hidden relative min-h-[30vh]">
+              <section className="scripts-stage flex-1 p-2 md:p-6 flex flex-col gap-2 md:gap-4 min-h-0 relative" style={{background:'radial-gradient(700px 400px at 100% 0%, rgba(99,102,241,0.05), transparent 60%), radial-gradient(600px 400px at 0% 100%, rgba(236,72,153,0.04), transparent 60%), #f6f8fc'}}>
+                  <div className="chat-panel flex-1 bg-white rounded-xl shadow-sm border border-zinc-200 flex flex-col overflow-hidden relative min-h-[30vh]">
                       <div className="flex-1 p-3 md:p-5 overflow-y-auto custom-scrollbar flex flex-col gap-4">
                           {chatHistory.length === 0 ? (
                                <div className="h-full flex flex-col items-center justify-center fade-in text-slate-400">
@@ -1945,7 +1945,7 @@ ${accumulated ? accumulated.substring(0, 12000) : '(当前场馆无已有规则)
                       </div>
                   </div>
 
-                  <div className="bg-white rounded-xl shadow-sm border border-zinc-200 shrink-0 overflow-hidden focus-within:ring-2 ring-blue-100 flex flex-col md:h-auto transition-all">
+                  <div className="composer-panel bg-white rounded-xl shadow-sm border border-zinc-200 shrink-0 overflow-hidden focus-within:ring-2 ring-blue-100 flex flex-col md:h-auto transition-all">
                       <div className="px-3 py-2 border-b border-slate-50 bg-zinc-50/50 flex items-center justify-between">
                           <div className="flex items-center gap-2">
                               <Icon d={PATHS.Bot} className="text-slate-400 w-4 h-4"/>
@@ -2028,8 +2028,8 @@ ${accumulated ? accumulated.substring(0, 12000) : '(当前场馆无已有规则)
 
           {/* ===== 图片管理库 ===== */}
           {activeTab === 'images' && (
-            <section className="absolute inset-0 flex flex-col bg-slate-100">
-                <div className="bg-white p-3 md:p-4 border-b border-zinc-200 flex flex-col md:flex-row gap-3 items-center shadow-sm z-10 shrink-0">
+            <section className="workspace-panel workspace-panel--images absolute inset-0 flex flex-col bg-slate-100">
+                <div className="images-toolbar bg-white p-3 md:p-4 border-b border-zinc-200 flex flex-col md:flex-row gap-3 items-center shadow-sm z-10 shrink-0">
                     <div className="relative w-full md:flex-1 md:max-w-xl"><span className="absolute left-3 top-2.5 text-slate-400"><Icon d={PATHS.Search}/></span><input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="搜索图片..." className="w-full pl-9 pr-3 py-2 bg-zinc-50 border border-zinc-200 rounded-lg text-sm outline-none" /></div>
                     <div className="flex w-full md:w-auto items-center gap-2 text-sm justify-between"><button onClick={openAddImage} className="hidden md:block px-3 bg-slate-800 text-white text-xs font-bold rounded-lg py-2">上传图片</button></div>
                 </div>
@@ -2037,7 +2037,7 @@ ${accumulated ? accumulated.substring(0, 12000) : '(当前场馆无已有规则)
                     {images.length === 0 && !loading && (<div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 text-xs"><Icon d={PATHS.Image} className="w-8 h-8 mb-2 opacity-50"/>暂无图片数据</div>)}
                     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4 pb-20 md:pb-0">
                         {filteredImages.map(img => (
-                            <div key={img.id} onClick={() => setViewImage(img)} className="group bg-white rounded-xl border border-zinc-200 cursor-pointer shadow-sm active:scale-95 transition-all duration-200 relative overflow-hidden">
+                            <div key={img.id} onClick={() => setViewImage(img)} className="image-card group bg-white rounded-xl border border-zinc-200 cursor-pointer shadow-sm active:scale-95 transition-all duration-200 relative overflow-hidden">
                                 <div className="aspect-video bg-slate-100 flex items-center justify-center relative overflow-hidden"><img src={img.url} className="w-full h-full object-cover"/><button onClick={(e) => { e.stopPropagation(); handleDelete('image', img); }} className="absolute top-1 right-1 bg-black/50 text-white p-1.5 rounded-full md:opacity-0 group-hover:opacity-100 transition backdrop-blur-sm"><Icon d={PATHS.Trash} className="w-4 h-4"/></button></div>
                                 <div className="p-2"><div className="font-bold text-xs truncate text-slate-700">{img.title}</div><div className="text-[10px] text-slate-400 truncate">{img.tags}</div></div>
                             </div>
@@ -2049,7 +2049,7 @@ ${accumulated ? accumulated.substring(0, 12000) : '(当前场馆无已有规则)
 
           {/* ===== 数据管理模块 ===== */}
           {activeTab === 'data_management' && (
-              <div className="absolute inset-0 flex flex-col bg-zinc-50 overflow-hidden z-30">
+              <div className="workspace-panel workspace-panel--data absolute inset-0 flex flex-col bg-zinc-50 overflow-hidden z-30">
                   <div className="bg-white border-b border-zinc-200 px-4 py-2 flex items-center justify-between shrink-0 shadow-sm">
                       <div className="flex gap-2">
                           <button onClick={() => setDataMgmtTab('chat')} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${dataMgmtTab==='chat' ? 'bg-zinc-800 text-white shadow' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'}`}>客服训练记录 ({chatLogs.length})</button>
@@ -2094,7 +2094,7 @@ ${accumulated ? accumulated.substring(0, 12000) : '(当前场馆无已有规则)
           
           {/* ===== 配置设定/AI训练 ===== */}
           {activeTab === 'training' && (
-            <div className="absolute inset-0 flex flex-col bg-slate-100 overflow-hidden z-30">
+            <div className="workspace-panel workspace-panel--training absolute inset-0 flex flex-col bg-slate-100 overflow-hidden z-30">
               <div className="bg-white border-b border-zinc-200 px-4 py-2 flex items-center shrink-0 shadow-sm z-10"><button onClick={() => setActiveTab('scripts')} className="text-slate-500 hover:text-slate-800 flex items-center gap-1 text-sm font-bold"><Icon d={PATHS.ArrowLeft} className="w-4 h-4"/> 返回主页</button></div>
               <div className="flex-1 flex flex-col md:flex-row p-4 gap-4 overflow-hidden min-h-0">
                   <div className="flex-1 bg-white rounded-xl shadow-sm border border-zinc-200 flex flex-col overflow-hidden">

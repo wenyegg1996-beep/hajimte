@@ -90,9 +90,9 @@ export function BetQuery() {
     };
 
     return (
-        <div className="absolute inset-0 bg-slate-100 overflow-y-auto p-4 flex flex-col items-center custom-scrollbar">
+        <div className="bet-workspace absolute inset-0 bg-slate-100 overflow-y-auto p-4 flex flex-col items-center custom-scrollbar">
             <div className="dbs-query-widget">
-                <div className="widget-box flex flex-col gap-3">
+                <div className="widget-box bet-query-card flex flex-col gap-3">
                     <div className="flex justify-between items-center">
                         <h3 className="font-bold text-slate-700 flex items-center gap-2"><Icon d={PATHS.Search} className="w-5 h-5 text-blue-600" /> 业务后台注单查询</h3>
                         <span className="text-[10px] text-slate-400 bg-slate-100 px-2 py-1 rounded">System Online</span>
@@ -161,8 +161,8 @@ export function BetQuery() {
 function TrackerModal({ isOpen, onClose, tickets, onDelete, isRefreshing, trackerMsg }) {
     if (!isOpen) return null;
     return (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 fade-in" onClick={onClose}>
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg flex flex-col transform transition-all scale-100 max-h-[85vh] overflow-hidden" onClick={e => e.stopPropagation()}>
+        <div className="dialog-shell fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 fade-in" onClick={onClose}>
+            <div className="dialog-card tracker-dialog bg-white rounded-2xl shadow-2xl w-full max-w-lg flex flex-col transform transition-all scale-100 max-h-[85vh] overflow-hidden" onClick={e => e.stopPropagation()}>
                 <div className="flex justify-between items-center p-4 border-b bg-slate-50">
                     <div className="flex items-center gap-2">
                         <span className="text-lg font-bold text-slate-800">注单实时监控</span>

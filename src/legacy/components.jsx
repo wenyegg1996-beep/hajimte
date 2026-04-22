@@ -156,8 +156,8 @@ export function StatusBar({ usage, cacheMeta, onCleanup }) {
 
 export function NotificationModal({ title, message, type = 'success', onClose }) {
     return (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 fade-in" onClick={onClose}>
-            <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-xs text-center flex flex-col items-center gap-4 transform transition-all scale-100" onClick={e => e.stopPropagation()}>
+        <div className="dialog-shell fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 fade-in" onClick={onClose}>
+            <div className="dialog-card dialog-card--compact bg-white rounded-xl shadow-lg p-6 w-full max-w-xs text-center flex flex-col items-center gap-4 transform transition-all scale-100" onClick={e => e.stopPropagation()}>
                 <div className={`w-12 h-12 rounded-full flex items-center justify-center ${type === 'success' ? 'bg-green-100 text-green-500' : 'bg-red-100 text-red-500'}`}>
                     <Icon d={type === 'success' ? PATHS.Check : PATHS.Close} className="w-6 h-6" />
                 </div>
@@ -174,8 +174,8 @@ export function NotificationModal({ title, message, type = 'success', onClose })
 export function DebugModal({ data, onClose }) {
     const jsonStr = window.safeStringify ? window.safeStringify(data, 2) : JSON.stringify(data, null, 2);
     return (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 fade-in" onClick={onClose}>
-            <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-2xl flex flex-col gap-4 transform transition-all scale-100 h-[80vh]" onClick={e => e.stopPropagation()}>
+        <div className="dialog-shell fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 fade-in" onClick={onClose}>
+            <div className="dialog-card dialog-card--debug bg-white rounded-2xl shadow-2xl p-6 w-full max-w-2xl flex flex-col gap-4 transform transition-all scale-100 h-[80vh]" onClick={e => e.stopPropagation()}>
                 <div className="flex justify-between items-center border-b pb-4">
                     <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
                         <Icon d={PATHS.Bug} className="w-5 h-5 text-indigo-500" /> 调试信息 (最近一次请求)
@@ -219,8 +219,8 @@ export function HighlightedTextarea({ value, onChange, placeholder, className, o
 
 export function SaveConfirmModal({ type, onClose, onConfirm }) {
     return (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 fade-in" onClick={onClose}>
-            <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-sm text-center flex flex-col items-center gap-4 transform transition-all scale-100" onClick={e => e.stopPropagation()}>
+        <div className="dialog-shell fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 fade-in" onClick={onClose}>
+            <div className="dialog-card dialog-card--compact bg-white rounded-xl shadow-lg p-6 w-full max-w-sm text-center flex flex-col items-center gap-4 transform transition-all scale-100" onClick={e => e.stopPropagation()}>
                 <div className="w-12 h-12 rounded-full flex items-center justify-center bg-zinc-100 text-zinc-500">
                     <Icon d={type === 'ann' ? PATHS.Brain : PATHS.Chat} className="w-6 h-6" />
                 </div>
@@ -239,8 +239,8 @@ export function SaveConfirmModal({ type, onClose, onConfirm }) {
 
 export function GeneralInputModal({ title, placeholder, value, onChange, onConfirm, onCancel }) {
     return (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 fade-in" onClick={onCancel}>
-            <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-sm flex flex-col gap-4 transform transition-all scale-100" onClick={e => e.stopPropagation()}>
+        <div className="dialog-shell fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 fade-in" onClick={onCancel}>
+            <div className="dialog-card dialog-card--form bg-white rounded-xl shadow-lg p-6 w-full max-w-sm flex flex-col gap-4 transform transition-all scale-100" onClick={e => e.stopPropagation()}>
                 <div className="flex justify-between items-center">
                     <h3 className="text-lg font-bold text-slate-800">{title}</h3>
                     <button onClick={onCancel} className="text-slate-400 hover:text-slate-600"><Icon d={PATHS.Close} className="w-5 h-5" /></button>
@@ -257,8 +257,8 @@ export function GeneralInputModal({ title, placeholder, value, onChange, onConfi
 
 export function GeneralConfirmModal({ title, message, onConfirm, onCancel, confirmText = "确认", cancelText = "取消", type = "danger" }) {
     return (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 fade-in" onClick={onCancel}>
-            <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-xs text-center flex flex-col items-center gap-4 transform transition-all scale-100" onClick={e => e.stopPropagation()}>
+        <div className="dialog-shell fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 fade-in" onClick={onCancel}>
+            <div className="dialog-card dialog-card--compact bg-white rounded-xl shadow-lg p-6 w-full max-w-xs text-center flex flex-col items-center gap-4 transform transition-all scale-100" onClick={e => e.stopPropagation()}>
                 <div className={`w-12 h-12 rounded-full flex items-center justify-center ${type === 'danger' ? 'bg-red-100 text-red-500' : 'bg-zinc-100 text-zinc-500'}`}>
                     <Icon d={type === 'danger' ? PATHS.Trash : PATHS.Check} className="w-6 h-6" />
                 </div>
