@@ -102,6 +102,122 @@ html, body {
     linear-gradient(135deg, #f5f7ff 0%, #fdf2f8 100%);
 }
 
+.login-bg--lavender {
+  background-image:
+    linear-gradient(180deg, rgba(10, 14, 55, 0.45), rgba(16, 14, 60, 0.6)),
+    radial-gradient(1200px 700px at 55% -10%, rgba(133, 92, 248, 0.5), transparent 60%),
+    url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=2200&q=80');
+  background-size: cover;
+  background-position: center;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 520px;
+  margin: 16px;
+  border-radius: 28px;
+  padding: 34px 32px 24px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: linear-gradient(180deg, rgba(53, 62, 136, 0.56), rgba(46, 41, 106, 0.68));
+  box-shadow: 0 24px 70px -18px rgba(11, 7, 46, 0.75);
+  backdrop-filter: blur(9px);
+  display: flex;
+  flex-direction: column;
+  color: #edf0ff;
+}
+.login-card__logo-wrap {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 16px;
+  border-radius: 999px;
+  padding: 2px;
+  background: linear-gradient(135deg, rgba(231, 235, 255, 0.85), rgba(212, 175, 255, 0.9));
+}
+.login-card__logo-inner {
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
+  background: #eef2ff;
+  overflow: hidden;
+  padding: 8px;
+}
+.login-card__title {
+  margin: 0;
+  text-align: center;
+  font-size: clamp(30px, 4vw, 46px);
+  letter-spacing: 0.3px;
+  font-weight: 800;
+}
+.login-card__subtitle {
+  margin: 8px 0 22px;
+  text-align: center;
+  color: rgba(238, 241, 255, 0.82);
+  font-size: 14px;
+}
+.login-card__label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  color: rgba(232, 236, 255, 0.9);
+  margin-bottom: 8px;
+}
+.login-card__input-wrap {
+  position: relative;
+}
+.login-card__input-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(238, 241, 255, 0.8);
+}
+.login-card__input {
+  width: 100%;
+  border-radius: 16px;
+  border: 1px solid rgba(225, 232, 255, 0.3);
+  background: rgba(28, 30, 75, 0.42);
+  color: #f4f5ff;
+  outline: none;
+  padding: 13px 14px 13px 44px;
+  font-size: 15px;
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+.login-card__input::placeholder { color: rgba(236, 239, 255, 0.55); }
+.login-card__input:focus {
+  border-color: rgba(190, 200, 255, 0.85);
+  box-shadow: 0 0 0 4px rgba(170, 149, 255, 0.18);
+}
+.login-card__input.is-error { border-color: rgba(254, 136, 136, 0.95); }
+.login-card__submit {
+  width: 100%;
+  margin-top: 20px;
+  border: 0;
+  border-radius: 999px;
+  padding: 13px 16px;
+  font-size: 21px;
+  font-weight: 700;
+  cursor: pointer;
+  color: #2b2a44;
+  background: #ffffff;
+  transition: transform .15s ease, opacity .2s ease;
+}
+.login-card__submit:hover { transform: translateY(-1px); }
+.login-card__submit:active { transform: translateY(0); }
+.login-card__submit:disabled { opacity: .75; cursor: wait; }
+.login-card__error {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: #fecaca;
+  font-weight: 600;
+  text-align: center;
+}
+.login-card__footer {
+  margin-top: 14px;
+  color: rgba(221, 226, 253, 0.75);
+  font-size: 11px;
+  text-align: center;
+}
+
 /* 彩虹文字 —— Pro Max Ultra Plus+ */
 .rainbow-text {
   background: linear-gradient(
@@ -1472,6 +1588,15 @@ html, body {
 .tool-btn.active.accent-emerald { background: linear-gradient(135deg, #34d399 0%, #10b981 50%, #059669 100%); box-shadow: 0 6px 20px -6px rgba(16, 185, 129, 0.5); }
 .tool-btn.active.accent-rose    { background: linear-gradient(135deg, #fb7185 0%, #f43f5e 50%, #e11d48 100%); box-shadow: 0 6px 20px -6px rgba(244, 63, 94, 0.5); }
 .tool-btn.active.accent-sky     { background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 50%, #0284c7 100%); box-shadow: 0 6px 20px -6px rgba(14, 165, 233, 0.5); }
+.tool-btn.tool-btn--stable {
+  transform: none !important;
+  min-width: 90px;
+  justify-content: center;
+}
+.tool-btn.tool-btn--stable:hover,
+.tool-btn.tool-btn--stable:active {
+  transform: none !important;
+}
 
 /* 列表卡片通用 */
 .list-card {

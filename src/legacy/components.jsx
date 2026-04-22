@@ -42,26 +42,36 @@ export function LoginScreen({ onLogin }) {
         }
     };
     return (
-        <div className="login-bg">
-            <div className="glass-panel p-7 rounded-2xl w-full max-w-sm flex flex-col items-center fade-in mx-4" style={{boxShadow: '0 20px 40px -8px rgba(99, 102, 241, 0.25)'}}>
-                <div className="w-20 h-20 mb-4 rounded-2xl flex items-center justify-center p-1.5 shadow-md" style={{background: 'linear-gradient(135deg, #6366f1, #8b5cf6, #ec4899)'}}>
-                    <div className="w-full h-full rounded-xl bg-white flex items-center justify-center overflow-hidden">
-                        <img src="https://lh3.googleusercontent.com/d/1Rri7vVK9YyhQEdqzvgmjQ4kzNZdbQuxV" className="w-full h-full object-contain rounded-xl" onError={(e) => { e.target.src = "https://via.placeholder.com/64?text=Cat" }} />
+        <div className="login-bg login-bg--lavender">
+            <div className="login-card fade-in">
+                <div className="login-card__logo-wrap">
+                    <div className="login-card__logo-inner">
+                        <img src="https://lh3.googleusercontent.com/d/1Rri7vVK9YyhQEdqzvgmjQ4kzNZdbQuxV" className="w-full h-full object-contain rounded-2xl" onError={(e) => { e.target.src = "https://via.placeholder.com/64?text=Cat" }} />
                     </div>
                 </div>
-                <h2 className="text-2xl font-extrabold tracking-tight" style={{color:'#0f172a'}}>哈基米助手</h2>
-                <div className="mb-6 mt-2">
-                    <span className="text-sm rainbow-text">Pro Max Ultra Plus+</span>
-                </div>
-                <div className="w-full relative mb-4">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2" style={{color:'#8b5cf6'}}>
+                <h2 className="login-card__title">Welcome back!</h2>
+                <p className="login-card__subtitle">登录哈基米助手，继续你的智能客服与公告工作流</p>
+
+                <label className="login-card__label">账号 / 动态码</label>
+                <div className="login-card__input-wrap">
+                    <span className="login-card__input-icon">
                         <Icon d={PATHS.Lock} />
                     </span>
-                    <input type="text" placeholder="输入账号或 6 位动态码" className="w-full pl-10 pr-4 py-3 border rounded-xl outline-none transition text-base bg-white/70" style={{borderColor: status === 'error' ? '#ef4444' : '#e4e7ee'}} onFocus={(e)=>{e.target.style.borderColor='#6366f1'; e.target.style.boxShadow='0 0 0 4px rgba(99,102,241,0.12)';}} onBlur={(e)=>{e.target.style.borderColor=status === 'error' ? '#ef4444' : '#e4e7ee'; e.target.style.boxShadow='none';}} value={code} onChange={e => { setCode(e.target.value); if (status === 'error') { setStatus('idle'); setErrorMessage(''); } }} onKeyDown={e => e.key === 'Enter' && handleLogin()} />
+                    <input
+                        type="text"
+                        placeholder="输入账号或 6 位动态码"
+                        className={`login-card__input ${status === 'error' ? 'is-error' : ''}`}
+                        value={code}
+                        onChange={e => { setCode(e.target.value); if (status === 'error') { setStatus('idle'); setErrorMessage(''); } }}
+                        onKeyDown={e => e.key === 'Enter' && handleLogin()}
+                    />
                 </div>
-                <button onClick={handleLogin} disabled={status === 'checking'} className="btn-primary w-full justify-center touch-target" style={{padding:'12px 16px', fontSize:'15px'}}>{status === 'checking' ? '验证中...' : '进入系统'}</button>
-                {status === 'error' && <p className="text-xs text-red-500 mt-3 font-medium text-center">{errorMessage || '验证失败，请检查输入'}</p>}
-                <div className="mt-5 text-[10px] text-slate-400">© Hajimi Studio · 智能客服与公告生成</div>
+
+                <button onClick={handleLogin} disabled={status === 'checking'} className="login-card__submit">
+                    {status === 'checking' ? '验证中...' : 'Log In'}
+                </button>
+                {status === 'error' && <p className="login-card__error">{errorMessage || '验证失败，请检查输入'}</p>}
+                <div className="login-card__footer">© Hajimi Studio · Pro Max Ultra Plus+</div>
             </div>
         </div>
     );

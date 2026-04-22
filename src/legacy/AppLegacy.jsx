@@ -1614,13 +1614,13 @@ ${accumulated ? accumulated.substring(0, 12000) : '(当前场馆无已有规则)
               )}
 
               {currentUser === 'aratakito' && userRole === 'admin' && (
-                  <button onClick={() => { setActiveTab('accounts'); fetchAccounts(); }} className={`tool-btn accent-rose hidden md:inline-flex ${activeTab === 'accounts' ? 'active' : ''}`}>
+                  <button onClick={() => { setActiveTab('accounts'); fetchAccounts(); }} className={`tool-btn tool-btn--stable accent-rose hidden md:inline-flex ${activeTab === 'accounts' ? 'active' : ''}`}>
                       <Icon d={PATHS.User} className="w-3 h-3"/> <span>账号</span>
                   </button>
               )}
 
               <button onClick={handleDownloadBackup} className="tool-btn accent-sky hidden md:inline-flex"><Icon d={PATHS.Download} className="w-3 h-3"/> <span>数据备份</span></button>
-              {userRole === 'admin' && <button onClick={() => setActiveTab('data_management')} className={`tool-btn accent-emerald hidden md:inline-flex ${activeTab === 'data_management' ? 'active' : ''}`}><Icon d={PATHS.Database} className="w-3 h-3"/> <span>数据管理</span></button>}
+              {userRole === 'admin' && <button onClick={() => setActiveTab('data_management')} className={`tool-btn tool-btn--stable accent-emerald hidden md:inline-flex ${activeTab === 'data_management' ? 'active' : ''}`}><Icon d={PATHS.Database} className="w-3 h-3"/> <span>数据管理</span></button>}
 
               <button onClick={openVenueModal} className="tool-btn accent-violet hidden md:inline-flex relative">
                   <Icon d={PATHS.Shield} className="w-3 h-3"/> <span>场馆规则</span>
