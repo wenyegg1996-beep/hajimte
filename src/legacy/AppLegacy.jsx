@@ -2055,7 +2055,7 @@ ${accumulated ? accumulated.substring(0, 12000) : '(当前场馆无已有规则)
                           <button onClick={() => setDataMgmtTab('chat')} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${dataMgmtTab==='chat' ? 'bg-zinc-800 text-white shadow' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'}`}>客服训练记录 ({chatLogs.length})</button>
                           <button onClick={() => setDataMgmtTab('ann')} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${dataMgmtTab==='ann' ? 'bg-zinc-900 text-white shadow-sm' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'}`}>公告训练记录 ({annLogs.length})</button>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 items-center">
                           <button onClick={() => setActiveTab('scripts')} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-zinc-100 text-zinc-500 hover:bg-zinc-200 transition">关闭</button>
                           <button onClick={fetchTrainingLogs} className="btn-icon-only"><Icon d={PATHS.Refresh} className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`}/></button>
                       </div>
