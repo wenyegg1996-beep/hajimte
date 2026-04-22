@@ -696,7 +696,28 @@ function App() {
                });
            }, MODE_FAST);
 
-           if (res.error) setAiReply("AI Error: " + res.error);
+           if (res.error) {
+               const errMsg = "AI Error: " + res.error;
+               setAiReply(errMsg);
+               setChatHistory(currHist => {
+                   const hist = [...currHist];
+                   if (hist.length > 0 && hist[hist.length - 1].role === 'assistant') {
+                       hist[hist.length - 1].content = errMsg;
+                       hist[hist.length - 1].displayContent = errMsg;
+                   } else {
+                       hist.push({ role: 'assistant', content: errMsg, displayContent: errMsg, triageData: currentImages.length===0 ? triageResult : null });
+                   }
+                   return hist;
+               });
+           } else if (res.success && res.data) {
+               setChatHistory(currHist => {
+                   const hist = [...currHist];
+                   if (hist.length > 0 && hist[hist.length - 1].role === 'user') {
+                       hist.push({ role: 'assistant', content: res.data, displayContent: res.data, triageData: currentImages.length===0 ? triageResult : null });
+                   }
+                   return hist;
+               });
+           }
            if (res.usage) setLastUsage(res.usage);
           if (res.cacheAction) setLastCacheMeta({ action: res.cacheAction, model: res.cacheModel, thinkingLevel: res.thinkingLevel });
            
