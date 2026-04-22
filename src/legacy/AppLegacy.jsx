@@ -1174,7 +1174,10 @@ ${accumulated ? accumulated.substring(0, 12000) : '(当前场馆无已有规则)
     if (!isAuthorized) return <LoginScreen onLogin={(user, role) => { localStorage.setItem(SESSION_KEY_TIME, Date.now().toString()); localStorage.setItem(SESSION_KEY_USER, user); localStorage.setItem(SESSION_KEY_ROLE, role); setCurrentUser(user); setUserRole(role); setIsAuthorized(true); setLoading(true); loadData(); }} />;
 
     return (
-      <div className="flex flex-col h-screen bg-slate-100 overflow-hidden fade-in pb-8">
+      <div className="app-shell flex flex-col h-screen overflow-hidden fade-in pb-8 relative">
+      <div className="app-bg-orb app-bg-orb-a" />
+      <div className="app-bg-orb app-bg-orb-b" />
+      <div className="app-bg-grid" />
       <div style={{ position: 'fixed', inset: 0, zIndex: 9999, pointerEvents: 'none', backgroundImage: wmBackground, backgroundRepeat: 'repeat' }} />
         
         {/* ======================= */}
