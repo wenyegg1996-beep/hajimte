@@ -1,9 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Fuse from 'fuse.js';
 import {
-    DEFAULT_ANN_BASE,
-    DEFAULT_BIZ_RULES,
-    DEFAULT_CHAT_BASE,
     ErrorBoundary,
     INITIAL_VARS,
     MODE_FAST,
@@ -91,9 +88,9 @@ function App() {
     const frontRef = useRef(null);
     const mailRef = useRef(null);
     const innerRef = useRef(null);
-    const [chatBase, setChatBase] = useState(DEFAULT_CHAT_BASE);
+    const [chatBase, setChatBase] = useState('');
     const [chatKnowledge, setChatKnowledge] = useState('');
-    const [annBase, setAnnBase] = useState(DEFAULT_ANN_BASE);
+    const [annBase, setAnnBase] = useState('');
     const [annKnowledge, setAnnKnowledge] = useState('');
     const [chatStaticContext, setChatStaticContext] = useState(''); 
     const [annStaticContext, setAnnStaticContext] = useState(''); 
@@ -112,7 +109,7 @@ function App() {
     const [showBackupConfirm, setShowBackupConfirm] = useState(false);
     const [lastDebugInfo, setLastDebugInfo] = useState(null);
     const [showDebugModal, setShowDebugModal] = useState(false);
-    const [businessRules, setBusinessRules] = useState(DEFAULT_BIZ_RULES);
+    const [businessRules, setBusinessRules] = useState('');
     const [trackedTickets, setTrackedTickets] = useState([]);
     const [isTrackerRefreshing, setIsTrackerRefreshing] = useState(false);
     const [showTrackerModal, setShowTrackerModal] = useState(false); 
@@ -147,11 +144,7 @@ function App() {
     const buildStaticCache = (scriptsData, templatesData, chatKB, annKB, venueData) => {
         const safeScripts = Array.isArray(scriptsData) ? scriptsData : [];
         const chatScriptLib = safeScripts.map(s => `[${s.keywords || '通用'}]: ${s.content}`).join("\n");
-        const safeVenues = Array.isArray(venueData) ? venueData : venueRules;
-        const venueLib = (safeVenues || []).filter(v => v.rules && v.rules.trim())
-            .map(v => `【${v.name}】\n${v.rules}`).join("\n\n---\n\n");
-        const venueSection = venueLib ? `\n\n### 场馆规则库 (Venue Rules — 用户问及对应场馆规则时严格引用)\n${venueLib}` : '';
-        setChatStaticContext(`${chatBase}\n\n### 知识库 (Knowledge Base)\n${chatKB || "暂无训练规则"}\n\n### 话术库 (Script Library)\n${chatScriptLib}${venueSection}`);
+        setChatStaticContext(`${chatBase}\n\n### 知识库 (Knowledge Base)\n${chatKB || "暂无训练规则"}\n\n### 话术库 (Script Library)\n${chatScriptLib}`);
         const annTemplateLib = JSON.stringify(templatesData || []);
         setAnnStaticContext(`${annBase}\n\n### 知识库/规则 (AI Knowledge Base)\n${annKB || "暂无训练规则"}\n\n### 模板库 (Template Library)\n${annTemplateLib}`);
     };
@@ -198,20 +191,16 @@ function App() {
 
             if (data.customVars && data.customVars.length > 0) { setTemplateVars([...INITIAL_VARS, ...data.customVars]); }
 
-            let cBase = data.settings?.chat_base;
+            let cBase = data.settings?.chat_base || '';
             let cKnow = data.settings?.chat_knowledge || "";
-            let bRules = data.settings?.business_rules;
-
-            if (!cBase) { cBase = DEFAULT_CHAT_BASE; await window.fbOps.saveCloudPrompts({ chat_base: DEFAULT_CHAT_BASE }); }
-            if (!bRules) { bRules = DEFAULT_BIZ_RULES; }
+            let bRules = data.settings?.business_rules || '';
 
             setChatBase(cBase);
             setChatKnowledge(cKnow);
             setBusinessRules(bRules);
 
-            let aBase = data.settings?.ann_base;
+            let aBase = data.settings?.ann_base || '';
             let aKnow = data.settings?.ann_knowledge || "";
-            if (!aBase) { aBase = DEFAULT_ANN_BASE; await window.fbOps.saveCloudPrompts({ ann_base: DEFAULT_ANN_BASE }); }
             setAnnBase(aBase);
             setAnnKnowledge(aKnow);
 
@@ -366,15 +355,9 @@ function App() {
     const usedVariables = useMemo(() => { if (!isEditingTemplate && !templateForm.id) return []; const fullText = (templateForm.front || '') + (templateForm.mail || '') + (templateForm.inner || ''); return templateVars.filter(v => fullText.includes(v)); }, [templateForm, templateVars, isEditingTemplate]);
 
     const handleResetToDefault = async () => {
-        if (!confirm("确定要重置AI设定为系统默认吗？这将覆盖当前的 Prompt。")) return;
-        setAnnBase(DEFAULT_ANN_BASE);
-        setChatBase(DEFAULT_CHAT_BASE);
-        setBusinessRules(DEFAULT_BIZ_RULES);
-        await window.fbOps.saveCloudPrompts({ 
-            chat_base: DEFAULT_CHAT_BASE, chat_knowledge: chatKnowledge, business_rules: DEFAULT_BIZ_RULES,
-            ann_base: DEFAULT_ANN_BASE, ann_knowledge: annKnowledge 
-        });
-        setNotification({title: '重置成功', message: '已恢复默认的最佳实践 Prompt。', type: 'success'});
+        if (!confirm("确定从数据库重新加载 AI 设定吗？这将丢弃当前未保存的修改。")) return;
+        await loadData();
+        setNotification({title: '已重载', message: '已从数据库读取最新 AI 设定。', type: 'success'});
     };
 
     const handleGenerateNotice = async () => {
@@ -696,7 +679,28 @@ function App() {
                });
            }, MODE_FAST);
 
-           if (res.error) setAiReply("AI Error: " + res.error);
+           if (res.error) {
+               const errMsg = "AI Error: " + res.error;
+               setAiReply(errMsg);
+               setChatHistory(currHist => {
+                   const hist = [...currHist];
+                   if (hist.length > 0 && hist[hist.length - 1].role === 'assistant') {
+                       hist[hist.length - 1].content = errMsg;
+                       hist[hist.length - 1].displayContent = errMsg;
+                   } else {
+                       hist.push({ role: 'assistant', content: errMsg, displayContent: errMsg, triageData: currentImages.length===0 ? triageResult : null });
+                   }
+                   return hist;
+               });
+           } else if (res.success && res.data) {
+               setChatHistory(currHist => {
+                   const hist = [...currHist];
+                   if (hist.length > 0 && hist[hist.length - 1].role === 'user') {
+                       hist.push({ role: 'assistant', content: res.data, displayContent: res.data, triageData: currentImages.length===0 ? triageResult : null });
+                   }
+                   return hist;
+               });
+           }
            if (res.usage) setLastUsage(res.usage);
           if (res.cacheAction) setLastCacheMeta({ action: res.cacheAction, model: res.cacheModel, thinkingLevel: res.thinkingLevel });
            
@@ -1170,7 +1174,10 @@ ${accumulated ? accumulated.substring(0, 12000) : '(当前场馆无已有规则)
     if (!isAuthorized) return <LoginScreen onLogin={(user, role) => { localStorage.setItem(SESSION_KEY_TIME, Date.now().toString()); localStorage.setItem(SESSION_KEY_USER, user); localStorage.setItem(SESSION_KEY_ROLE, role); setCurrentUser(user); setUserRole(role); setIsAuthorized(true); setLoading(true); loadData(); }} />;
 
     return (
-      <div className="flex flex-col h-screen bg-slate-100 overflow-hidden fade-in pb-8">
+      <div className="app-shell flex flex-col h-screen overflow-hidden fade-in pb-8 relative">
+      <div className="app-bg-orb app-bg-orb-a" />
+      <div className="app-bg-orb app-bg-orb-b" />
+      <div className="app-bg-grid" />
       <div style={{ position: 'fixed', inset: 0, zIndex: 9999, pointerEvents: 'none', backgroundImage: wmBackground, backgroundRepeat: 'repeat' }} />
         
         {/* ======================= */}
@@ -1847,7 +1854,7 @@ ${accumulated ? accumulated.substring(0, 12000) : '(当前场馆无已有规则)
               <section className="w-full md:w-1/3 md:min-w-[320px] bg-white border-b md:border-b-0 md:border-r border-zinc-200 flex flex-col shadow-lg z-10 shrink-0 h-[40%] md:h-full overflow-hidden">
                   <div className="p-2 md:p-3 border-b border-zinc-100 flex gap-2">
                       <div className="relative w-1/3 max-w-[130px]">
-                        <button onClick={() => setIsCategoryOpen(!isCategoryOpen)} className="w-full bg-white border border-slate-200 text-slate-700 text-xs rounded-lg px-3 py-2 pr-7 outline-none text-left truncate flex items-center justify-between relative hover:border-indigo-300 transition">
+                        <button onClick={() => setIsCategoryOpen(!isCategoryOpen)} className="w-full h-10 bg-white border border-slate-200 text-slate-700 text-xs rounded-lg px-3 py-2 pr-7 outline-none text-left truncate flex items-center justify-between relative hover:border-indigo-300 transition">
                           {selectedCategory ? (<span className={`cat-chip cat-c${window.UtilsLib.categoryColor(selectedCategory)}`} style={{padding:'2px 6px', fontSize:'10px'}}>{selectedCategory}</span>) : (<span className="truncate text-slate-600 font-semibold">全部分类</span>)}
                           <div className={`absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-transform ${isCategoryOpen ? 'rotate-180' : ''}`}><Icon d={PATHS.ChevronDown} className="w-3 h-3"/></div>
                         </button>
@@ -1869,8 +1876,8 @@ ${accumulated ? accumulated.substring(0, 12000) : '(当前场馆无已有规则)
                         </>)}
                       </div>
                       <div className="relative flex-1">
-                        <span className="absolute left-3 top-2.5 text-indigo-400"><Icon d={PATHS.Search} /></span>
-                        <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="搜索话术..." className="main-input pl-9" />
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-indigo-400"><Icon d={PATHS.Search} /></span>
+                        <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="搜索话术..." className="main-input h-10 pl-9" />
                       </div>
                       <button onClick={openAddScript} className="hidden md:inline-flex btn-primary"><Icon d={PATHS.Plus} className="w-3 h-3"/>新增</button>
                   </div>

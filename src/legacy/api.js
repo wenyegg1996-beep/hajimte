@@ -27,6 +27,14 @@ const convertOpenAIToGemini = (messages) => {
     return { systemInstruction, contents };
 };
 
+const getAuthToken = () => {
+    try {
+        return localStorage.getItem('hajimi_auth_token');
+    } catch {
+        return null;
+    }
+};
+
 const getCandidateText = (candidate) => {
     const parts = candidate?.content?.parts;
     if (!Array.isArray(parts) || !parts.length) return '';
@@ -35,12 +43,36 @@ const getCandidateText = (candidate) => {
         .join('');
 };
 
+const getUpstreamHint = (payload) => {
+    if (!payload || typeof payload !== 'object') return '';
+    const blockReason = payload?.promptFeedback?.blockReason;
+    const finishReason = payload?.candidates?.[0]?.finishReason;
+    const safetyRatings = payload?.candidates?.[0]?.safetyRatings;
+    const safetyHint = Array.isArray(safetyRatings)
+        ? safetyRatings
+            .filter((item) => item?.blocked)
+            .map((item) => item?.category)
+            .filter(Boolean)
+            .join(', ')
+        : '';
+
+    const hints = [];
+    if (blockReason) hints.push(`blockReason=${blockReason}`);
+    if (finishReason) hints.push(`finishReason=${finishReason}`);
+    if (safetyHint) hints.push(`safetyBlocked=${safetyHint}`);
+    return hints.join(' | ');
+};
+
 export const callGeminiStream = async (messages, temp = 0.4, onChunk, mode = MODE_FAST, maxOutputTokens) => {
     try {
         const { systemInstruction, contents } = convertOpenAIToGemini(messages);
+        const token = getAuthToken();
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers.Authorization = `Bearer ${token}`;
+
         const response = await fetch('/api/gemini', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers,
             body: JSON.stringify({
                 messages: { systemInstruction, contents },
                 mode: mode,
@@ -110,7 +142,7 @@ export const callGeminiStream = async (messages, temp = 0.4, onChunk, mode = MOD
         if (!fullText) {
             const fallbackResponse = await fetch('/api/gemini', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers,
                 body: JSON.stringify({
                     messages: { systemInstruction, contents },
                     mode: mode,
@@ -127,10 +159,17 @@ export const callGeminiStream = async (messages, temp = 0.4, onChunk, mode = MOD
                     fullText = fallbackText;
                     if (onChunk) onChunk(fallbackText, fallbackText);
                     finalUsage = fallbackData?.usageMetadata || finalUsage;
+                } else {
+                    const hint = getUpstreamHint(fallbackData);
+                    return { error: hint ? `模型未返回文本内容（${hint}）` : '模型未返回文本内容（空响应）' };
                 }
+            } else {
+                const errText = await fallbackResponse.text();
+                return { error: `回退请求失败: ${fallbackResponse.status} - ${errText}` };
             }
         }
 
+        if (!fullText) return { error: '模型未返回文本内容（空响应）' };
         return { success: true, data: fullText, usage: finalUsage, cacheAction, cacheModel, thinkingLevel };
     } catch (e) { return { error: "连接异常: " + e.message }; }
 };
@@ -138,9 +177,13 @@ export const callGeminiStream = async (messages, temp = 0.4, onChunk, mode = MOD
 export const callGeminiJSON = async (messages, temp = 0.3, mode = MODE_FAST) => {
     try {
         const { systemInstruction, contents } = convertOpenAIToGemini(messages);
+        const token = getAuthToken();
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers.Authorization = `Bearer ${token}`;
+
         const response = await fetch('/api/gemini', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers,
             body: JSON.stringify({
                 messages: { systemInstruction, contents },
                 mode: mode,
@@ -161,7 +204,10 @@ export const callGeminiJSON = async (messages, temp = 0.3, mode = MODE_FAST) => 
 
         const data = await response.json();
         let rawText = getCandidateText(data.candidates?.[0]);
-        if (!rawText) throw new Error("Empty response from backend");
+        if (!rawText) {
+            const hint = getUpstreamHint(data);
+            throw new Error(hint ? `Empty response from backend (${hint})` : "Empty response from backend");
+        }
 
         const jsonMatch = rawText.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
