@@ -554,7 +554,7 @@ function App() {
                triageResult.core_intent = "IMAGE_ANALYSIS";
            }
 
-           // 场馆规则：移到 System Prompt 走 Gemini Context Cache（server.js 对 >2000字 systemInstruction 自动建缓存, TTL 30天）
+           // 场馆规则：移到 System Prompt 走 Gemini Context Cache（server.js 对 >2000字 systemInstruction 自动建缓存, TTL 1小时）
            // 这里只做一个"命中提示"，让 AI 重点关注对应章节，不再作为唯一注入源
            let venueHitHint = "";
            if (triageResult.matched_venue && venueRules.length > 0) {

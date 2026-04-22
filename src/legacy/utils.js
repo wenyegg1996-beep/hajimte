@@ -135,7 +135,7 @@ export const UtilsLib = {
     SESSION_KEY_USER: 'session_user',
     SESSION_KEY_ROLE: 'session_role',
     SESSION_TIMEOUT: 86400000, // 24 hours
-    CACHE_TTL_SECONDS: 2592000, // 30 days
+    CACHE_TTL_SECONDS: 3600, // 1 hour
 
     // 压缩图片 - 保留文字清晰度但大幅减小体积，默认最大宽度 1600px
     async compressImage(file, maxWidth = 1600, quality = 0.85) {

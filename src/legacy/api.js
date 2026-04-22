@@ -27,6 +27,14 @@ const convertOpenAIToGemini = (messages) => {
     return { systemInstruction, contents };
 };
 
+const getCandidateText = (candidate) => {
+    const parts = candidate?.content?.parts;
+    if (!Array.isArray(parts) || !parts.length) return '';
+    return parts
+        .map((part) => (typeof part?.text === 'string' ? part.text : ''))
+        .join('');
+};
+
 export const callGeminiStream = async (messages, temp = 0.4, onChunk, mode = MODE_FAST, maxOutputTokens) => {
     try {
         const { systemInstruction, contents } = convertOpenAIToGemini(messages);
@@ -85,7 +93,7 @@ export const callGeminiStream = async (messages, temp = 0.4, onChunk, mode = MOD
                 if (json) {
                     const items = Array.isArray(json) ? json : [json];
                     for (const item of items) {
-                        const text = item.candidates?.[0]?.content?.parts?.[0]?.text;
+                        const text = getCandidateText(item.candidates?.[0]);
                         if (text) {
                             fullText += text;
                             if (onChunk) onChunk(text, fullText);
@@ -126,7 +134,7 @@ export const callGeminiJSON = async (messages, temp = 0.3, mode = MODE_FAST) => 
         const thinkingLevel = response.headers.get('X-Cache-Thinking') || '';
 
         const data = await response.json();
-        let rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        let rawText = getCandidateText(data.candidates?.[0]);
         if (!rawText) throw new Error("Empty response from backend");
 
         const jsonMatch = rawText.match(/\{[\s\S]*\}/);

@@ -128,6 +128,15 @@ export async function proxyGeminiRequest(req, res) {
       }
     }
 
+    const { results: tailResults } = extractJSON(buffer);
+    for (const jsonStr of tailResults) {
+      try {
+        res.write(`data: ${JSON.stringify(JSON.parse(jsonStr))}\n\n`);
+      } catch {
+        continue;
+      }
+    }
+
     res.end();
     return;
   }
