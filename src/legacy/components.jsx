@@ -14,7 +14,10 @@ export function Icon({ d, className }) {
 }
 
 export function LoginScreen({ onLogin }) {
-    const [code, setCode] = useState('');
+    const [account, setAccount] = useState('');
+    const [password, setPassword] = useState('');
+    const [shieldCode, setShieldCode] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [status, setStatus] = useState('idle');
     const [errorMessage, setErrorMessage] = useState('');
     const loginDecorations = [
@@ -78,7 +81,7 @@ export function LoginScreen({ onLogin }) {
         },
     ];
     const handleLogin = async () => {
-        if (!code.trim()) {
+        if (!account.trim()) {
             setStatus('error');
             setErrorMessage('请输入账号');
             return;
@@ -88,7 +91,7 @@ export function LoginScreen({ onLogin }) {
         setErrorMessage('');
 
         try {
-            const result = await window.fbOps.verifyLogin(code.trim());
+            const result = await window.fbOps.verifyLogin(account.trim());
             if (result.success) {
                 onLogin(result.username, result.role);
                 return;
@@ -127,18 +130,56 @@ export function LoginScreen({ onLogin }) {
                 <h2 className="login-card__title">登录</h2>
                 <p className="login-card__subtitle">登录您的账号</p>
 
-                <div className="login-card__input-wrap">
-                    <span className="login-card__input-icon">
-                        <Icon d={PATHS.User} />
-                    </span>
-                    <input
-                        type="text"
-                        placeholder="输入账号"
-                        className={`login-card__input ${status === 'error' ? 'is-error' : ''}`}
-                        value={code}
-                        onChange={e => { setCode(e.target.value); if (status === 'error') { setStatus('idle'); setErrorMessage(''); } }}
-                        onKeyDown={e => e.key === 'Enter' && handleLogin()}
-                    />
+                <div className="login-card__fields">
+                    <div className="login-card__input-wrap">
+                        <span className="login-card__input-icon">
+                            <Icon d={PATHS.User} />
+                        </span>
+                        <input
+                            type="text"
+                            placeholder="输入账号"
+                            className={`login-card__input ${status === 'error' ? 'is-error' : ''}`}
+                            value={account}
+                            onChange={e => { setAccount(e.target.value); if (status === 'error') { setStatus('idle'); setErrorMessage(''); } }}
+                            onKeyDown={e => e.key === 'Enter' && handleLogin()}
+                        />
+                    </div>
+
+                    <div className="login-card__input-wrap">
+                        <span className="login-card__input-icon">
+                            <Icon d={PATHS.Lock} />
+                        </span>
+                        <input
+                            type={showPassword ? 'text' : 'password'}
+                            placeholder="登录密码"
+                            className="login-card__input login-card__input--password"
+                            value={password}
+                            onChange={e => setPassword(e.target.value)}
+                            onKeyDown={e => e.key === 'Enter' && handleLogin()}
+                        />
+                        <button
+                            type="button"
+                            className="login-card__password-toggle"
+                            aria-label={showPassword ? '隐藏密码' : '显示密码'}
+                            onClick={() => setShowPassword(prev => !prev)}
+                        >
+                            <Icon d={PATHS.Eye} />
+                        </button>
+                    </div>
+
+                    <div className="login-card__input-wrap">
+                        <span className="login-card__input-icon">
+                            <Icon d={PATHS.Lock} />
+                        </span>
+                        <input
+                            type="text"
+                            placeholder="绑定U盾用户，需要输入U盾验证码"
+                            className="login-card__input"
+                            value={shieldCode}
+                            onChange={e => setShieldCode(e.target.value)}
+                            onKeyDown={e => e.key === 'Enter' && handleLogin()}
+                        />
+                    </div>
                 </div>
 
                 <button onClick={handleLogin} disabled={status === 'checking'} className="login-card__submit">
