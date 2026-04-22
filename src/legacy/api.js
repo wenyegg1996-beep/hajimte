@@ -105,6 +105,32 @@ export const callGeminiStream = async (messages, temp = 0.4, onChunk, mode = MOD
                 }
             }
         }
+
+        // 某些运行时/代理会导致流式分块不可解析，回退到非流式保证有结果
+        if (!fullText) {
+            const fallbackResponse = await fetch('/api/gemini', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    messages: { systemInstruction, contents },
+                    mode: mode,
+                    temperature: temp,
+                    stream: false,
+                    ...(maxOutputTokens ? { maxOutputTokens } : {})
+                })
+            });
+
+            if (fallbackResponse.ok) {
+                const fallbackData = await fallbackResponse.json();
+                const fallbackText = getCandidateText(fallbackData?.candidates?.[0]);
+                if (fallbackText) {
+                    fullText = fallbackText;
+                    if (onChunk) onChunk(fallbackText, fallbackText);
+                    finalUsage = fallbackData?.usageMetadata || finalUsage;
+                }
+            }
+        }
+
         return { success: true, data: fullText, usage: finalUsage, cacheAction, cacheModel, thinkingLevel };
     } catch (e) { return { error: "连接异常: " + e.message }; }
 };
