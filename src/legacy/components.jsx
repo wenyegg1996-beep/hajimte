@@ -21,59 +21,61 @@ export function LoginScreen({ onLogin }) {
         {
             cls: 'login-molecule login-molecule--hero',
             lines: [
-                { x: 40, y: 35, w: 165, r: 34, cls: 'line-main' },
-                { x: 206, y: 132, w: 18, r: 90, cls: 'line-soft' },
+                { x: 38, y: 28, w: 192, r: 33.4, cls: 'line-main' },
             ],
             nodes: [
-                { x: 16, y: 0, size: 'lg', tone: 'blue', pulse: 'slow' },
-                { x: 194, y: 126, size: 'md', tone: 'red', pulse: 'mid' },
-                { x: 236, y: 131, size: 'xs', tone: 'fade', pulse: 'fast' },
-                { x: 231, y: 104, size: 'xs', tone: 'red', pulse: 'fast' },
+                { x: 6, y: 0, size: 'lg', tone: 'blue', pulse: 'slow' },
+                { x: 176, y: 106, size: 'md', tone: 'red', pulse: 'mid' },
+                { x: 222, y: 103, size: 'xs', tone: 'fade', pulse: 'fast' },
+                { x: 183, y: 146, size: 'xs', tone: 'red', pulse: 'fast' },
+                { x: 172, y: 71, size: 'xs', tone: 'red', pulse: 'fast' },
             ],
         },
         {
             cls: 'login-molecule login-molecule--top',
             lines: [
-                { x: 16, y: 30, w: 42, r: -28, cls: 'line-gold' },
+                { x: 12, y: 27, w: 48, r: -43, cls: 'line-gold' },
             ],
             nodes: [
-                { x: 0, y: 36, size: 'xs', tone: 'gold', pulse: 'fast' },
+                { x: 0, y: 34, size: 'xs', tone: 'gold', pulse: 'fast' },
                 { x: 58, y: 0, size: 'sm', tone: 'blue', pulse: 'mid' },
             ],
         },
         {
             cls: 'login-molecule login-molecule--right',
             lines: [
-                { x: 82, y: 26, w: 100, r: 90, cls: 'line-main' },
-                { x: 86, y: 123, w: 74, r: 30, cls: 'line-main' },
-                { x: 86, y: 124, w: 68, r: -26, cls: 'line-soft' },
+                { x: 161, y: 18, w: 100, r: 89, cls: 'line-main' },
+                { x: 20, y: 67, w: 150, r: 22, cls: 'line-main' },
+                { x: 154, y: 118, w: 112, r: 28, cls: 'line-main' },
+                { x: 164, y: 116, w: 100, r: -63, cls: 'line-soft' },
             ],
             nodes: [
-                { x: 0, y: 66, size: 'xs', tone: 'fade', pulse: 'mid' },
-                { x: 99, y: 114, size: 'lg', tone: 'blue', pulse: 'slow' },
-                { x: 153, y: 164, size: 'xs', tone: 'fade', pulse: 'fast' },
-                { x: 194, y: 148, size: 'xs', tone: 'fade', pulse: 'fast' },
-                { x: 220, y: 171, size: 'xs', tone: 'red', pulse: 'fast' },
+                { x: 0, y: 60, size: 'sm', tone: 'fade', pulse: 'mid' },
+                { x: 155, y: 4, size: 'sm', tone: 'fade', pulse: 'mid' },
+                { x: 155, y: 112, size: 'lg', tone: 'fade', pulse: 'slow' },
+                { x: 210, y: 175, size: 'xs', tone: 'fade', pulse: 'fast' },
+                { x: 315, y: 145, size: 'sm', tone: 'fade', pulse: 'mid' },
+                { x: 316, y: 304, size: 'xs', tone: 'red', pulse: 'fast' },
             ],
         },
         {
             cls: 'login-molecule login-molecule--bottom',
             lines: [
-                { x: 28, y: 67, w: 52, r: 34, cls: 'line-main' },
+                { x: 22, y: 63, w: 52, r: 28, cls: 'line-main' },
             ],
             nodes: [
-                { x: 0, y: 80, size: 'md', tone: 'blue', pulse: 'slow' },
-                { x: 82, y: 18, size: 'sm', tone: 'fade', pulse: 'mid' },
+                { x: 0, y: 78, size: 'md', tone: 'fade', pulse: 'slow' },
+                { x: 78, y: 18, size: 'sm', tone: 'fade', pulse: 'mid' },
             ],
         },
         {
             cls: 'login-molecule login-molecule--left',
             lines: [
-                { x: 38, y: 75, w: 96, r: -39, cls: 'line-main' },
+                { x: 28, y: 76, w: 116, r: -33.5, cls: 'line-main' },
             ],
             nodes: [
-                { x: 0, y: 78, size: 'lg', tone: 'blue', pulse: 'slow' },
-                { x: 133, y: 0, size: 'sm', tone: 'fade', pulse: 'mid' },
+                { x: 0, y: 74, size: 'lg', tone: 'blue', pulse: 'slow' },
+                { x: 143, y: -2, size: 'sm', tone: 'fade', pulse: 'mid' },
             ],
         },
     ];

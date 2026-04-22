@@ -125,12 +125,12 @@ html, body {
   position: absolute;
   display: block;
   height: 1px;
-  background: rgba(205, 214, 228, 0.46);
+  background: rgba(211, 219, 231, 0.34);
   transform-origin: left center;
 }
 
-.login-molecule__line.line-soft { opacity: 0.55; }
-.login-molecule__line.line-gold { background: rgba(239, 204, 116, 0.55); }
+.login-molecule__line.line-soft { opacity: 0.42; }
+.login-molecule__line.line-gold { background: rgba(239, 204, 116, 0.52); }
 
 .login-molecule__node {
   position: absolute;
@@ -161,7 +161,7 @@ html, body {
 .login-molecule__node.is-blue { color: rgba(121, 160, 214, 0.62); }
 .login-molecule__node.is-red { color: rgba(241, 177, 189, 0.76); }
 .login-molecule__node.is-gold { color: rgba(240, 205, 122, 0.86); }
-.login-molecule__node.is-fade { color: rgba(209, 219, 235, 0.7); }
+.login-molecule__node.is-fade { color: rgba(213, 221, 235, 0.62); }
 
 .login-molecule__node.is-lg { width: 42px; height: 42px; }
 .login-molecule__node.is-md { width: 26px; height: 26px; box-shadow: 0 0 0 7px rgba(255,255,255,0.16); }
@@ -185,10 +185,10 @@ html, body {
 }
 
 .login-molecule--right {
-  right: 40px;
-  bottom: 126px;
-  width: 228px;
-  height: 178px;
+  right: 12px;
+  bottom: 102px;
+  width: 332px;
+  height: 316px;
   animation: moleculeFloatRight 11.6s ease-in-out infinite;
 }
 
@@ -201,10 +201,10 @@ html, body {
 }
 
 .login-molecule--left {
-  left: 8px;
-  bottom: -12px;
-  width: 186px;
-  height: 118px;
+  left: -2px;
+  bottom: -16px;
+  width: 194px;
+  height: 132px;
   animation: moleculeFloatLeft 12.8s ease-in-out infinite;
 }
 
