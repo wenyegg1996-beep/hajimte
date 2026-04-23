@@ -12,6 +12,7 @@ import { createDbRouter } from './routes/db.js';
 import { createGeminiRouter } from './routes/gemini.js';
 import { createImageRouter } from './routes/images.js';
 import { getUploadsDir } from './services/storage.js';
+import { env } from './lib/env.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(__dirname, '../..');
