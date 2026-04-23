@@ -14,7 +14,7 @@ Zeabur 使用 Node.js 服务（或读取仓库中的 `zbpack.json`）：
 
 - Build Command: `pnpm build`
 - Start Command: `pnpm start`
-- Node Version: `22.x`
+- Node Version: `24.x`
 
 仓库内已提供 `zbpack.json`：
 
