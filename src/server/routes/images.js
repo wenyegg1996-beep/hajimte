@@ -2,10 +2,12 @@ import { Router } from 'express';
 import multer from 'multer';
 import mongoose from 'mongoose';
 import { AppError } from '../lib/errors.js';
+import { logger } from '../lib/logger.js';
 import { getCollectionModel } from '../services/db.js';
 import { saveImageObject, getImageBuffer } from '../services/storage.js';
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
+const INLINE_IMAGE_FALLBACK_MAX_BYTES = 1024 * 1024;
 
 export function createPublicImageRouter() {
   const router = Router();
@@ -71,13 +73,37 @@ export function createImageUploadRouter() {
         throw new AppError('Missing image data or tags', 400, 'INVALID_IMAGE_UPLOAD');
       }
 
-      const { storageKey, url } = await saveImageObject({ buffer, mimeType, originalName });
+      let storageKey = null;
+      let url = null;
+      let imageData;
+
+      try {
+        const stored = await saveImageObject({ buffer, mimeType, originalName });
+        storageKey = stored.storageKey;
+        url = stored.url;
+      } catch (error) {
+        if (buffer.length > INLINE_IMAGE_FALLBACK_MAX_BYTES) {
+          throw error;
+        }
+
+        logger.warn({
+          err: error,
+          fallback: 'mongodb_inline_image',
+          mimeType,
+          size: buffer.length,
+          originalName,
+        }, 'image_storage_fallback');
+
+        imageData = buffer.toString('base64');
+      }
+
       const id = new mongoose.Types.ObjectId().toString();
 
       await ImageModel.create({
         _id: id,
         title,
         tags,
+        imageData,
         url,
         storageKey,
         mimeType,
