@@ -43,6 +43,11 @@ const getCandidateText = (candidate) => {
         .join('');
 };
 
+const normalizeModelText = (text) => {
+    if (typeof text !== 'string') return '';
+    return text.replace(/<<<ACTION_TRACK>>>/g, '').trim();
+};
+
 const getUpstreamHint = (payload) => {
     if (!payload || typeof payload !== 'object') return '';
     const blockReason = payload?.promptFeedback?.blockReason;
@@ -134,7 +139,8 @@ export const callGeminiStream = async (messages, temp = 0.4, onChunk, mode = MOD
             const text = getCandidateText(item.candidates?.[0]);
             if (text) {
                 fullText += text;
-                if (onChunk) onChunk(text, fullText);
+                const visibleText = normalizeModelText(fullText);
+                if (visibleText && onChunk) onChunk(text, visibleText);
             }
             if (item.usageMetadata) {
                 finalUsage = item.usageMetadata;
@@ -194,7 +200,7 @@ export const callGeminiStream = async (messages, temp = 0.4, onChunk, mode = MOD
 
             if (fallbackResponse.ok) {
                 const fallbackData = await fallbackResponse.json();
-                const fallbackText = getCandidateText(fallbackData?.candidates?.[0]);
+                const fallbackText = normalizeModelText(getCandidateText(fallbackData?.candidates?.[0]));
                 if (fallbackText) {
                     fullText = fallbackText;
                     if (onChunk) onChunk(fallbackText, fallbackText);
@@ -209,8 +215,9 @@ export const callGeminiStream = async (messages, temp = 0.4, onChunk, mode = MOD
             }
         }
 
-        if (!fullText) return { error: '模型未返回文本内容（空响应）' };
-        return { success: true, data: fullText, usage: finalUsage, cacheAction, cacheModel, thinkingLevel };
+        const normalizedText = normalizeModelText(fullText);
+        if (!normalizedText) return { error: '模型未返回可显示文本内容（空响应）' };
+        return { success: true, data: normalizedText, usage: finalUsage, cacheAction, cacheModel, thinkingLevel };
     } catch (e) { return { error: "连接异常: " + e.message }; }
 };
 

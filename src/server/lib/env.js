@@ -4,7 +4,7 @@ export const env = {
   GEMINI_API_KEY: process.env.GEMINI_API_KEY || '',
   GEMINI_MODEL: process.env.GEMINI_MODEL || 'gemini-3.1-flash-lite-preview',
   GEMINI_CACHE_TTL_SECONDS: 3600,
-  GEMINI_PROXY_TIMEOUT_MS: Number(process.env.GEMINI_PROXY_TIMEOUT_MS || 30000),
+  GEMINI_PROXY_TIMEOUT_MS: Number(process.env.GEMINI_PROXY_TIMEOUT_MS || 55000),
   GEMINI_CACHE_MIN_CHARS: Number(process.env.GEMINI_CACHE_MIN_CHARS || 2000),
   SESSION_SECRET: process.env.SESSION_SECRET || 'hajimi-dev-session-secret',
   SESSION_EXPIRES_IN: process.env.SESSION_EXPIRES_IN || '12h',

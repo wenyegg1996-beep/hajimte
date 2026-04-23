@@ -517,6 +517,13 @@ function App() {
             )));
         };
 
+        const finalizeAssistantMessage = (content, triageData = null) => {
+            const safeContent = typeof content === 'string' && content.trim()
+                ? content
+                : 'AI 本次没有返回可显示内容，请直接重试一次；如果频繁出现，请检查 Vercel 函数日志中的超时或上游空响应。';
+            updateAssistantMessage(safeContent, triageData);
+        };
+
         try {
            setAiPhase('triage');
            
@@ -676,15 +683,21 @@ function App() {
 
                const cleanText = fullText.replace("<<<ACTION_TRACK>>>", "");
                setAiReply(cleanText); 
-               updateAssistantMessage(cleanText, currentImages.length===0 ? triageResult : null);
+               if (cleanText.trim()) {
+                   updateAssistantMessage(cleanText, currentImages.length===0 ? triageResult : null);
+               }
            }, MODE_FAST);
 
            if (res.error) {
                const errMsg = "AI Error: " + res.error;
                setAiReply(errMsg);
-               updateAssistantMessage(errMsg, currentImages.length===0 ? triageResult : null);
+               finalizeAssistantMessage(errMsg, currentImages.length===0 ? triageResult : null);
            } else if (res.success && res.data) {
-               updateAssistantMessage(res.data, currentImages.length===0 ? triageResult : null);
+               finalizeAssistantMessage(res.data, currentImages.length===0 ? triageResult : null);
+           } else {
+               const fallbackMsg = 'AI 请求已结束，但没有得到明确结果。请稍后重试，或查看 Vercel 日志确认是否发生函数超时。';
+               setAiReply(fallbackMsg);
+               finalizeAssistantMessage(fallbackMsg, currentImages.length===0 ? triageResult : null);
            }
            if (res.usage) setLastUsage(res.usage);
           if (res.cacheAction) setLastCacheMeta({ action: res.cacheAction, model: res.cacheModel, thinkingLevel: res.thinkingLevel });
