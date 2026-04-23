@@ -63,6 +63,7 @@ function App() {
     const [uploading, setUploading] = useState(false);
     const [viewImage, setViewImage] = useState(null);
     const [copyingImage, setCopyingImage] = useState(false);
+    const [imageCopyToast, setImageCopyToast] = useState(null);
     const [copiedScriptId, setCopiedScriptId] = useState(null);
     const fileInputRef = useRef(null);
     const [rawNotice, setRawNotice] = useState('');
@@ -849,11 +850,18 @@ const handleUploadImage = async () => { updateActivity(); if (!imageForm.file ||
     }, []);
 
     const handleCopy = React.useCallback((text) => { updateActivity(); navigator.clipboard.writeText(text); setNotification({title:'复制成功', message:'', type:'success'}); }, []);
+    const showImageCopyToast = React.useCallback((message, type = 'success') => {
+        setImageCopyToast({ message, type });
+        window.clearTimeout(window.__hajimiImageCopyToastTimer);
+        window.__hajimiImageCopyToastTimer = window.setTimeout(() => {
+            setImageCopyToast(null);
+        }, 1400);
+    }, []);
     const handleCopyImage = React.useCallback(async (image) => {
         updateActivity();
         if (!image?.id) return;
         if (typeof ClipboardItem === 'undefined' || !navigator.clipboard?.write) {
-            setNotification({title:'复制失败', message:'当前浏览器不支持直接复制图片', type:'error'});
+            showImageCopyToast('当前浏览器不支持直接复制图片', 'error');
             return;
         }
 
@@ -870,13 +878,13 @@ const handleUploadImage = async () => { updateActivity(); if (!imageForm.file ||
                     [blob.type || 'image/png']: blob,
                 }),
             ]);
-            setNotification({title:'复制成功', message:'图片已复制到剪贴板', type:'success'});
+            showImageCopyToast('图片已复制到剪贴板');
         } catch (e) {
-            setNotification({title:'复制失败', message:e.message || '暂时无法复制图片', type:'error'});
+            showImageCopyToast(e.message || '暂时无法复制图片', 'error');
         } finally {
             setCopyingImage(false);
         }
-    }, []);
+    }, [showImageCopyToast]);
     const handleCopyScript = (content, id) => { updateActivity(); navigator.clipboard.writeText(content); setCopiedScriptId(id); setSearchTerm(''); setTimeout(() => setCopiedScriptId(null), 1000); };
     const handleAnnFeedback = async (type) => { updateActivity(); if (type === 'bad' && !annCorrectReason.trim()) return setNotification({title: '提示', message: '请填写原因', type: 'error'}); setAnnSubmitStatus('sending'); try { await window.fbOps.saveAnnFeedback({ raw: rawNotice, ...genResult, type, reason: type==='good'?'Keep':annCorrectReason }); setAnnSubmitStatus(type === 'good' ? 'success_good' : 'success_bad'); if(type === 'bad') setAnnCorrectReason(''); setTimeout(() => setAnnSubmitStatus('idle'), 3000); } catch (e) { setNotification({title: '反馈失败', message: e.message, type: 'error'}); setAnnSubmitStatus('idle'); } };
     
@@ -1585,6 +1593,11 @@ ${accumulated ? accumulated.substring(0, 12000) : '(当前场馆无已有规则)
         {/* 图片预览及复制快捷按钮模态框 */}
         {viewImage && (
            <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-sm flex flex-col items-center justify-center p-4 fade-in" onClick={() => setViewImage(null)}>
+               {imageCopyToast && (
+                   <div className={`absolute top-6 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full text-sm font-bold shadow-xl border transition-all ${imageCopyToast.type === 'error' ? 'bg-red-500/90 text-white border-red-300/40' : 'bg-emerald-500/90 text-white border-emerald-300/40'}`} onClick={e => e.stopPropagation()}>
+                       {imageCopyToast.message}
+                   </div>
+               )}
                <img src={`/api/images/${viewImage.id}`} className="max-w-full max-h-[70vh] object-contain shadow-2xl rounded-lg" onClick={(e) => e.stopPropagation()} />
                <div className="mt-4 bg-white/10 border border-white/10 backdrop-blur text-white px-6 py-3 rounded-2xl text-sm flex flex-col items-center gap-2 shadow-2xl" onClick={e => e.stopPropagation()}>
                    <span className="font-bold text-blue-200 text-lg">{viewImage.title || '未命名图片'}</span>
