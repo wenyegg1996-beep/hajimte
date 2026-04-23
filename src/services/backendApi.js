@@ -1,4 +1,6 @@
 const AUTH_TOKEN_KEY = 'hajimi_auth_token';
+const VERCEL_UPLOAD_LIMIT_BYTES = 4.5 * 1024 * 1024;
+const TARGET_UPLOAD_BYTES = 3.8 * 1024 * 1024;
 
 function getAuthToken() {
     return localStorage.getItem(AUTH_TOKEN_KEY);
@@ -7,6 +9,68 @@ function getAuthToken() {
 function setAuthToken(token) {
     if (token) localStorage.setItem(AUTH_TOKEN_KEY, token);
     else localStorage.removeItem(AUTH_TOKEN_KEY);
+}
+
+function changeFileExtension(filename, extension) {
+    const base = filename.replace(/\.[^.]+$/, '');
+    return `${base || 'image'}.${extension}`;
+}
+
+function loadImageFromFile(file) {
+    return new Promise((resolve, reject) => {
+        const objectUrl = URL.createObjectURL(file);
+        const image = new Image();
+        image.onload = () => {
+            URL.revokeObjectURL(objectUrl);
+            resolve(image);
+        };
+        image.onerror = () => {
+            URL.revokeObjectURL(objectUrl);
+            reject(new Error('无法读取图片文件'));
+        };
+        image.src = objectUrl;
+    });
+}
+
+async function compressImageForUpload(file) {
+    if (!(file instanceof File) || !file.type.startsWith('image/')) {
+        return file;
+    }
+
+    if (file.size <= TARGET_UPLOAD_BYTES) {
+        return file;
+    }
+
+    const image = await loadImageFromFile(file);
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    if (!context) {
+        throw new Error('当前浏览器不支持图片压缩');
+    }
+
+    const maxDimension = 2200;
+    const scale = Math.min(1, maxDimension / Math.max(image.width, image.height));
+    canvas.width = Math.max(1, Math.round(image.width * scale));
+    canvas.height = Math.max(1, Math.round(image.height * scale));
+    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+    const qualities = [0.9, 0.82, 0.74, 0.66, 0.58, 0.5, 0.42];
+    for (const quality of qualities) {
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', quality));
+        if (!blob) continue;
+
+        const compressed = new File(
+            [blob],
+            changeFileExtension(file.name, 'jpg'),
+            { type: 'image/jpeg', lastModified: Date.now() }
+        );
+
+        if (compressed.size <= TARGET_UPLOAD_BYTES) {
+            return compressed;
+        }
+    }
+
+    throw new Error('图片过大，压缩后仍超过 Vercel 上传限制，请换一张更小的图片');
 }
 
 async function apiCall(method, path, body = null, { isForm = false } = {}) {
@@ -33,7 +97,11 @@ async function apiCall(method, path, body = null, { isForm = false } = {}) {
             : await response.text();
 
         if (!response.ok) {
-            const message = typeof data === 'string' ? data : data?.error || 'Request failed';
+            const message = response.status === 413
+                ? '图片过大，Vercel 单次请求上限约 4.5MB，请换小一点的图片'
+                : typeof data === 'string'
+                    ? data
+                    : data?.details?.message || data?.error || response.statusText || 'Request failed';
             throw new Error(message);
         }
 
@@ -78,8 +146,13 @@ export const backendApi = {
     saveKnowledge: async (k) => apiCall('POST', '/api/db/knowledge_base', k),
     getImages: async () => apiCall('GET', '/api/db/images'),
     async uploadImage(file, title, tags) {
+        const uploadFile = await compressImageForUpload(file);
+        if (uploadFile.size > VERCEL_UPLOAD_LIMIT_BYTES) {
+            throw new Error('图片过大，Vercel 单次请求上限约 4.5MB，请换小一点的图片');
+        }
+
         const formData = new FormData();
-        formData.append('image', file);
+        formData.append('image', uploadFile);
         formData.append('title', title || 'img');
         formData.append('tags', tags);
         formData.append('time', new Date().toISOString());
