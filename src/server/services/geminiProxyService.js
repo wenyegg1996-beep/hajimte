@@ -115,27 +115,26 @@ export async function proxyGeminiRequest(req, res) {
     let buffer = '';
     const decoder = new TextDecoder();
 
-    for await (const chunk of response.body) {
-      buffer += decoder.decode(chunk, { stream: true });
-      const { results, remaining } = extractJSON(buffer);
-      buffer = remaining;
+    const flushResults = (results) => {
       for (const jsonStr of results) {
         try {
-          res.write(`data: ${JSON.stringify(JSON.parse(jsonStr))}\n\n`);
+          JSON.parse(jsonStr); // validate only
+          res.write(`data: ${jsonStr}\n\n`);
         } catch {
           continue;
         }
       }
+    };
+
+    for await (const chunk of response.body) {
+      buffer += decoder.decode(chunk, { stream: true });
+      const { results, remaining } = extractJSON(buffer);
+      buffer = remaining;
+      flushResults(results);
     }
 
     const { results: tailResults } = extractJSON(buffer);
-    for (const jsonStr of tailResults) {
-      try {
-        res.write(`data: ${JSON.stringify(JSON.parse(jsonStr))}\n\n`);
-      } catch {
-        continue;
-      }
-    }
+    flushResults(tailResults);
 
     res.end();
     return;
