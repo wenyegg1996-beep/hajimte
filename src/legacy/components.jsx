@@ -290,6 +290,9 @@ const INTENT_META = {
 };
 
 export const ChatMessage = React.memo(({ msg, idx, activeMsgIndex, feedbackState, correctionText, setCorrectionText, submitCorrectionMsg, setActiveMsgIndex, setFeedbackState, handleLikeMsg, handleDislikeMsg, openSmartOptModal, handleCopy }) => {
+    if (msg.role === 'assistant' && msg.pending && !(msg.displayContent || msg.content)) {
+        return null;
+    }
     const intentCode = msg.role === 'assistant' && msg.triageData && msg.triageData.core_intent;
     const intentInfo = intentCode ? (INTENT_META[intentCode] || INTENT_META.OTHER) : null;
     const matchedVenue = msg.triageData && msg.triageData.matched_venue;
