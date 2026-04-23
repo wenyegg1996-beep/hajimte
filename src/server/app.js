@@ -21,7 +21,7 @@ export async function createServerApp() {
   await connectToDatabase();
 
   const app = express();
-  app.use(cors());
+  app.use(cors(env.CORS_ORIGIN ? { origin: env.CORS_ORIGIN } : {}));
   app.use(express.json({ limit: '10mb' }));
   app.use(express.urlencoded({ limit: '10mb', extended: true }));
   app.use(pinoHttp({ logger }));

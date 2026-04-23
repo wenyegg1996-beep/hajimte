@@ -26,14 +26,21 @@ export async function resolveLogin(input) {
   }
 
   const AccessKey = getCollectionModel('access_keys');
+
+  // Fast path: exact username match via indexed query
+  if (input.length !== 6 || !/^\d+$/.test(input)) {
+    const byUsername = await AccessKey.findOne({ username: input, active: true }).lean();
+    if (byUsername) {
+      return { username: byUsername.username, role: byUsername.role || 'user' };
+    }
+    throw new AppError('Invalid login', 401, 'INVALID_LOGIN');
+  }
+
+  // TOTP path: must check all keys with a secret
   const keys = await AccessKey.find({ active: true }).lean();
 
   for (const data of keys) {
-    if (data.username && data.username === input) {
-      return { username: data.username, role: data.role || 'user' };
-    }
-
-    if (data.secret && input.length === 6 && /^\d+$/.test(input)) {
+    if (data.secret) {
       try {
         const totp = new TOTP({
           algorithm: 'SHA1',

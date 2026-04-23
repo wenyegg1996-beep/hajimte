@@ -99,11 +99,10 @@ export function createDbRouter() {
       }
 
       const Model = getCollectionModel(req.params.collection);
-      const doc = await Model.findById(req.params.id).lean();
+      const doc = await Model.findByIdAndDelete(req.params.id).lean();
       if (req.params.collection === 'images' && doc?.storageKey) {
         await deleteImageObject(doc.storageKey).catch(() => {});
       }
-      await Model.findByIdAndDelete(req.params.id);
       res.json({ success: true });
     } catch (error) {
       next(error);

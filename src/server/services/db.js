@@ -45,6 +45,12 @@ async function ensureIndexes() {
   await Promise.all([
     db.collection('scripts').createIndex({ user: 1, time: -1 }, { background: true }),
     db.collection('monitoring').createIndex({ user: 1, time: -1 }, { background: true }),
+    // Collections queried with sort:{time:-1} need this index to avoid full scans
+    db.collection('images').createIndex({ time: -1 }, { background: true }),
+    db.collection('announcement_logs').createIndex({ time: -1 }, { background: true }),
+    db.collection('training_data').createIndex({ time: -1 }, { background: true }),
+    // Used in login: findOne({username, active:true})
+    db.collection('access_keys').createIndex({ username: 1, active: 1 }, { background: true }),
   ]);
 }
 

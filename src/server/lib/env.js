@@ -1,5 +1,6 @@
 export const env = {
   PORT: Number(process.env.PORT || 8080),
+  CORS_ORIGIN: process.env.CORS_ORIGIN || '',
   MONGODB_URI: process.env.MONGODB_URI || '',
   GEMINI_API_KEY: process.env.GEMINI_API_KEY || '',
   GEMINI_MODEL: process.env.GEMINI_MODEL || 'gemini-3.1-flash-lite-preview',

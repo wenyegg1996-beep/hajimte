@@ -6,6 +6,11 @@ import { getCollectionModel } from './db.js';
 
 const inFlightCreation = new Map();
 
+// In-memory cache: avoids a MongoDB round-trip on every Gemini request.
+// Invalidated immediately on write; stale after 60 s at most.
+const memCache = new Map(); // modelName → { value, expiresAt }
+const MEM_CACHE_TTL_MS = 60_000;
+
 function hashPrompt(prompt) {
   return crypto.createHash('sha256').update(prompt).digest('hex');
 }
@@ -21,14 +26,23 @@ async function persistCache(modelName, value) {
     { $set: { ...value, updatedAt: new Date() } },
     { upsert: true }
   );
+  memCache.set(modelName, { value, expiresAt: Date.now() + MEM_CACHE_TTL_MS });
 }
 
 export async function hydrateGeminiCachePool(modelName = env.GEMINI_MODEL) {
+  const cached = memCache.get(modelName);
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.value;
+  }
+
   const CacheModel = getCacheModel();
   const row = await CacheModel.findById(modelName).lean();
-  return row
+  const value = row
     ? { id: row.id || null, hash: row.hash || null, expireTime: row.expireTime || null }
     : { id: null, hash: null, expireTime: null };
+
+  memCache.set(modelName, { value, expiresAt: Date.now() + MEM_CACHE_TTL_MS });
+  return value;
 }
 
 async function createRemoteCache(systemPrompt, modelName, apiKey) {

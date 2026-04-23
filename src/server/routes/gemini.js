@@ -1,8 +1,10 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import { env } from '../lib/env.js';
+import { AppError } from '../lib/errors.js';
 import { cleanupGeminiCaches } from '../services/geminiCacheService.js';
 import { proxyGeminiRequest } from '../services/geminiProxyService.js';
+import { requireRole } from '../middleware/auth.js';
 
 export function createGeminiRouter() {
   const router = Router();
@@ -21,7 +23,7 @@ export function createGeminiRouter() {
     }
   });
 
-  router.post('/cleanup-caches', async (req, res, next) => {
+  router.post('/cleanup-caches', requireRole('admin'), async (req, res, next) => {
     try {
       const result = await cleanupGeminiCaches();
       res.json({ success: true, ...result });
@@ -30,7 +32,7 @@ export function createGeminiRouter() {
     }
   });
 
-  router.post('/update-cache', async (req, res, next) => {
+  router.post('/update-cache', requireRole('admin'), async (req, res, next) => {
     try {
       const result = await cleanupGeminiCaches();
       res.json({ success: true, mode: 'managed', ...result });

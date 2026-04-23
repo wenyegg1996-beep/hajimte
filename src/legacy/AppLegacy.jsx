@@ -118,6 +118,7 @@ function App() {
     const [hasUnreadUpdates, setHasUnreadUpdates] = useState(false); 
     const [trackerMsg, setTrackerMsg] = useState(''); 
     const trackedTicketsRef = useRef([]);
+    const trainingDataRef = useRef([]);
 
     const [accounts, setAccounts] = useState([]);
     const [showAccountModal, setShowAccountModal] = useState(false);
@@ -182,7 +183,11 @@ function App() {
         try {
             if (!window.fbOps) throw new Error("fbOps not loaded");
             const user = localStorage.getItem(SESSION_KEY_USER);
-            const data = await window.UtilsLib.loadDataInParallel(window.fbOps, user);
+            const [data, trainingData] = await Promise.all([
+                window.UtilsLib.loadDataInParallel(window.fbOps, user),
+                window.UtilsLib.safeLoad(() => window.fbOps.getTrainingDataAll(), []),
+            ]);
+            trainingDataRef.current = trainingData;
 
             setScripts(data.scripts || []);
             setExtraKnowledge(data.knowledge || []);
@@ -608,13 +613,10 @@ function App() {
            `;
 
            let redLinesContext = "";
-           try {
-               const allTraining = await window.fbOps.getTrainingDataAll();
-               const recentBads = allTraining.filter(l => l.type === 'bad' && l.correction).slice(0, 3);
-               if (recentBads.length > 0) {
-                   redLinesContext = "### 🚨 绝对操作红线 (历史教训)\n" + recentBads.map((l, i) => `${i+1}. 曾犯错: ${l.answer}\n纠正: ${l.correction}`).join("\n");
-               }
-           } catch(err) {}
+           const recentBads = trainingDataRef.current.filter(l => l.type === 'bad' && l.correction).slice(0, 3);
+           if (recentBads.length > 0) {
+               redLinesContext = "### 🚨 绝对操作红线 (历史教训)\n" + recentBads.map((l, i) => `${i+1}. 曾犯错: ${l.answer}\n纠正: ${l.correction}`).join("\n");
+           }
 
            setAiPhase('execution');
 
