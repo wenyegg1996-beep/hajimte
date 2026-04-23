@@ -1556,7 +1556,7 @@ ${accumulated ? accumulated.substring(0, 12000) : '(当前场馆无已有规则)
         {/* 图片预览及复制快捷按钮模态框 */}
         {viewImage && (
            <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-sm flex flex-col items-center justify-center p-4 fade-in" onClick={() => setViewImage(null)}>
-               <img src={viewImage.url} className="max-w-full max-h-[70vh] object-contain shadow-2xl rounded-lg" onClick={(e) => e.stopPropagation()} />
+               <img src={`/api/images/${viewImage.id}`} className="max-w-full max-h-[70vh] object-contain shadow-2xl rounded-lg" onClick={(e) => e.stopPropagation()} />
                <div className="mt-4 bg-white/10 border border-white/10 backdrop-blur text-white px-6 py-3 rounded-2xl text-sm flex flex-col items-center gap-2 shadow-2xl" onClick={e => e.stopPropagation()}>
                    <span className="font-bold text-blue-200 text-lg">{viewImage.title || '未命名图片'}</span>
                    <div className="flex gap-2">
@@ -2041,7 +2041,7 @@ ${accumulated ? accumulated.substring(0, 12000) : '(当前场馆无已有规则)
                     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4 pb-20 md:pb-0">
                         {filteredImages.map(img => (
                             <div key={img.id} onClick={() => setViewImage(img)} className="group bg-white rounded-xl border border-zinc-200 cursor-pointer shadow-sm active:scale-95 transition-all duration-200 relative overflow-hidden">
-                                <div className="aspect-video bg-slate-100 flex items-center justify-center relative overflow-hidden"><img src={img.url} className="w-full h-full object-cover"/><button onClick={(e) => { e.stopPropagation(); handleDelete('image', img); }} className="absolute top-1 right-1 bg-black/50 text-white p-1.5 rounded-full md:opacity-0 group-hover:opacity-100 transition backdrop-blur-sm"><Icon d={PATHS.Trash} className="w-4 h-4"/></button></div>
+                                <div className="aspect-video bg-slate-100 flex items-center justify-center relative overflow-hidden"><img src={`/api/images/${img.id}`} className="w-full h-full object-cover"/><button onClick={(e) => { e.stopPropagation(); handleDelete('image', img); }} className="absolute top-1 right-1 bg-black/50 text-white p-1.5 rounded-full md:opacity-0 group-hover:opacity-100 transition backdrop-blur-sm"><Icon d={PATHS.Trash} className="w-4 h-4"/></button></div>
                                 <div className="p-2"><div className="font-bold text-xs truncate text-slate-700">{img.title}</div><div className="text-[10px] text-slate-400 truncate">{img.tags}</div></div>
                             </div>
                         ))}

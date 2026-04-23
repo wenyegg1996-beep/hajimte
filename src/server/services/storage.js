@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
-import { PutObjectCommand, DeleteObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { PutObjectCommand, DeleteObjectCommand, GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { env } from '../lib/env.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -43,10 +43,10 @@ export async function saveImageObject({ buffer, mimeType, originalName }) {
       ContentType: mimeType,
     }));
 
-    const publicBase = env.S3_PUBLIC_BASE_URL || env.S3_ENDPOINT;
+    const publicBase = env.S3_PUBLIC_BASE_URL;
     const url = publicBase
-      ? `${publicBase.replace(/\/$/, '')}/${env.S3_BUCKET}/${key}`
-      : key;
+      ? `${publicBase.replace(/\/$/, '')}/${key}`
+      : null;
 
     return { storageKey: key, url };
   }
@@ -79,4 +79,23 @@ export async function deleteImageObject(storageKey) {
 
 export function getUploadsDir() {
   return uploadsDir;
+}
+
+export async function getImageBuffer(storageKey) {
+  if (isS3Enabled()) {
+    const client = getS3Client();
+    const response = await client.send(new GetObjectCommand({
+      Bucket: env.S3_BUCKET,
+      Key: storageKey,
+    }));
+    const chunks = [];
+    for await (const chunk of response.Body) {
+      chunks.push(chunk);
+    }
+    return { buffer: Buffer.concat(chunks), contentType: response.ContentType };
+  }
+
+  const fullPath = path.join(uploadsDir, storageKey);
+  const buffer = await fs.readFile(fullPath);
+  return { buffer, contentType: null };
 }

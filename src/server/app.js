@@ -10,7 +10,7 @@ import { errorHandler } from './middleware/errorHandler.js';
 import { createAuthRouter } from './routes/auth.js';
 import { createDbRouter } from './routes/db.js';
 import { createGeminiRouter } from './routes/gemini.js';
-import { createImageRouter } from './routes/images.js';
+import { createPublicImageRouter, createImageUploadRouter } from './routes/images.js';
 import { getUploadsDir } from './services/storage.js';
 import { env } from './lib/env.js';
 
@@ -32,7 +32,8 @@ export async function createServerApp() {
   app.get('/api/auth/session', requireAuth, (req, res) => {
     res.json({ success: true, user: req.user });
   });
-  app.use('/api', requireAuth, createImageRouter());
+  app.use('/api', createPublicImageRouter());
+  app.use('/api', requireAuth, createImageUploadRouter());
   app.use('/api', requireAuth, createGeminiRouter());
   app.use('/api/db', requireAuth, createDbRouter());
 
