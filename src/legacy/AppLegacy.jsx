@@ -48,6 +48,7 @@ function App() {
     const [chatHistory, setChatHistory] = useState([]);
     const [pastedImages, setPastedImages] = useState([]);
     const chatEndRef = useRef(null);
+    const chatHistoryRef = useRef([]);
 
     const [aiReply, setAiReply] = useState('');
     const [aiPhase, setAiPhase] = useState(''); // 'triage' | 'execution' | ''
@@ -134,6 +135,7 @@ function App() {
     const venueFileInputRef = useRef(null);
 
     useEffect(() => { trackedTicketsRef.current = trackedTickets; }, [trackedTickets]);
+    useEffect(() => { chatHistoryRef.current = chatHistory; }, [chatHistory]);
 
     useEffect(() => {
         if (chatEndRef.current) {
@@ -498,13 +500,22 @@ function App() {
             currentImages.forEach(img => { currentUserContent.push({ inlineData: { mimeType: img.mimeType, data: img.data } }); });
         }
         currentUserContent.push({ text: currentUserMsg });
+        const requestId = `chat_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
         
         const displayUserMsg = { role: 'user', content: currentUserContent, displayContent: currentUserMsg, displayImages: currentImages };
-        
-        const currentFullHistory = [...chatHistory, displayUserMsg];
-        setChatHistory(currentFullHistory);
+        const assistantPlaceholder = { role: 'assistant', content: '', displayContent: '', pending: true, requestId };
+        const currentFullHistory = [...chatHistoryRef.current, displayUserMsg];
+        setChatHistory([...currentFullHistory, assistantPlaceholder]);
         setCustomerInput('');
         setPastedImages([]);
+
+        const updateAssistantMessage = (content, triageData = null) => {
+            setChatHistory(currHist => currHist.map((msg) => (
+                msg.requestId === requestId
+                    ? { ...msg, content, displayContent: content, pending: false, triageData }
+                    : msg
+            )));
+        };
 
         try {
            setAiPhase('triage');
@@ -665,41 +676,15 @@ function App() {
 
                const cleanText = fullText.replace("<<<ACTION_TRACK>>>", "");
                setAiReply(cleanText); 
-               
-               setChatHistory(currHist => {
-                   const hist = [...currHist];
-                   if (hist.length > 0 && hist[hist.length - 1].role === 'user') {
-                       hist.push({ role: 'assistant', content: cleanText, displayContent: cleanText, triageData: currentImages.length===0 ? triageResult : null });
-                   } else if (hist.length > 0) {
-                       hist[hist.length - 1].content = cleanText;
-                       hist[hist.length - 1].displayContent = cleanText;
-                       hist[hist.length - 1].triageData = currentImages.length===0 ? triageResult : null;
-                   }
-                   return hist;
-               });
+               updateAssistantMessage(cleanText, currentImages.length===0 ? triageResult : null);
            }, MODE_FAST);
 
            if (res.error) {
                const errMsg = "AI Error: " + res.error;
                setAiReply(errMsg);
-               setChatHistory(currHist => {
-                   const hist = [...currHist];
-                   if (hist.length > 0 && hist[hist.length - 1].role === 'assistant') {
-                       hist[hist.length - 1].content = errMsg;
-                       hist[hist.length - 1].displayContent = errMsg;
-                   } else {
-                       hist.push({ role: 'assistant', content: errMsg, displayContent: errMsg, triageData: currentImages.length===0 ? triageResult : null });
-                   }
-                   return hist;
-               });
+               updateAssistantMessage(errMsg, currentImages.length===0 ? triageResult : null);
            } else if (res.success && res.data) {
-               setChatHistory(currHist => {
-                   const hist = [...currHist];
-                   if (hist.length > 0 && hist[hist.length - 1].role === 'user') {
-                       hist.push({ role: 'assistant', content: res.data, displayContent: res.data, triageData: currentImages.length===0 ? triageResult : null });
-                   }
-                   return hist;
-               });
+               updateAssistantMessage(res.data, currentImages.length===0 ? triageResult : null);
            }
            if (res.usage) setLastUsage(res.usage);
           if (res.cacheAction) setLastCacheMeta({ action: res.cacheAction, model: res.cacheModel, thinkingLevel: res.thinkingLevel });
@@ -709,7 +694,9 @@ function App() {
 
          } catch (e) { 
              console.error(e); 
-             setAiReply("处理过程出错: " + e.message); 
+             const errMsg = "处理过程出错: " + e.message;
+             setAiReply(errMsg); 
+             updateAssistantMessage(errMsg);
              setAiPhase('');
              setAiLoading(false);
          }
