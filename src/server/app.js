@@ -35,8 +35,20 @@ export async function createServerApp() {
   app.use('/api', requireAuth, createGeminiRouter());
   app.use('/api/db', requireAuth, createDbRouter());
 
-  app.use(express.static(distDir));
+  app.use(express.static(distDir, {
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith('index.html')) {
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+        return;
+      }
+
+      if (filePath.includes(`${path.sep}assets${path.sep}`)) {
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      }
+    },
+  }));
   app.get('*', (_req, res) => {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
     res.sendFile(path.join(distDir, 'index.html'));
   });
 
