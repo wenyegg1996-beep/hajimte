@@ -22,6 +22,7 @@ export async function createServerApp() {
   await connectToDatabase();
 
   const app = express();
+  app.set('trust proxy', 1);
   app.use(cors(env.CORS_ORIGIN ? { origin: env.CORS_ORIGIN } : {}));
   app.use(express.json({ limit: '10mb' }));
   app.use(express.urlencoded({ limit: '10mb', extended: true }));
