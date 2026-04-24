@@ -62,6 +62,8 @@ function App() {
     const [imageForm, setImageForm] = useState({ file: null, preview: null, title: '', tags: '' });
     const [uploading, setUploading] = useState(false);
     const [viewImage, setViewImage] = useState(null);
+    const [copyingImage, setCopyingImage] = useState(false);
+    const [imageCopyToast, setImageCopyToast] = useState(null);
     const [copiedScriptId, setCopiedScriptId] = useState(null);
     const fileInputRef = useRef(null);
     const [rawNotice, setRawNotice] = useState('');
@@ -489,6 +491,44 @@ function App() {
         setActiveMsgIndex(-1);
     };
 
+    const extractLikelyOrderId = React.useCallback((text) => {
+        if (typeof text !== 'string') return null;
+        const trimmed = text.trim();
+        if (/^5\d{15,19}$/.test(trimmed)) return trimmed;
+
+        if (!/(注单|订单|单号|單號|order|ticket)/i.test(text)) return null;
+        const match = text.match(/(^|[^0-9])(5\d{15,19})(?!\d)/);
+        return match?.[2] || null;
+    }, []);
+
+    const findDirectVenueMatch = React.useCallback((text) => {
+        const normalized = (text || '').toLowerCase();
+        if (!normalized) return null;
+        return venueRules.find(v => {
+            const name = (v.name || '').trim().toLowerCase();
+            return name && normalized.includes(name);
+        }) || null;
+    }, [venueRules]);
+
+    const shouldRunTriage = React.useCallback((text, directVenue, orderId) => {
+        if (orderId || directVenue) return true;
+        if (typeof text !== 'string') return false;
+
+        return /(账号|被盗|风控|封号|冻结|充值|到账|彩金|优惠|活动|注单|订单|赛事|结算|串关|连串|盘口|赔率|走水|赢半|输半|规则|场馆|真人|电子|体育|公告|取消|拒单|无效)/i.test(text);
+    }, []);
+
+    const inferIntentHeuristically = React.useCallback((text, directVenue, orderId, hasImages) => {
+        if (hasImages) return 'IMAGE_ANALYSIS';
+        if (directVenue) return 'CASINO_RULE';
+        if (orderId) return 'GAME_RESULT';
+        if (/(账号.*(被盗|异常)|被盗|盗号|安全)/i.test(text)) return 'ACCOUNT_SECURITY';
+        if (/(封号|冻结|风控|限制登录)/i.test(text)) return 'ACCOUNT_LOCK';
+        if (/(充值|存款|入款|到账|未到帐|未到账)/i.test(text)) return 'DEPOSIT_ISSUE';
+        if (/(彩金|优惠|活动|奖励|返水)/i.test(text)) return 'PROMO_CLAIM';
+        if (/(体育|盘口|让分|大小球|滚球|赛果|结算|串关|连串|赔率)/i.test(text)) return 'SPORT_RULE';
+        return 'OTHER';
+    }, []);
+
     const handleCallAI = async () => { 
         updateActivity(); 
         if (!customerInput.trim() && pastedImages.length === 0) return; 
@@ -531,8 +571,9 @@ function App() {
         };
 
         try {
-           setAiPhase('triage');
-           
+           const directVenueMatch = findDirectVenueMatch(currentUserMsg);
+           const likelyOrderId = extractLikelyOrderId(currentUserMsg);
+           const runTriage = currentImages.length === 0 && shouldRunTriage(currentUserMsg, directVenueMatch, likelyOrderId);
            const venueNames = venueRules.map(v => v.name).filter(Boolean);
            const venueListHint = venueNames.length > 0 ? `当前已收录的场馆有：${venueNames.join('、')}。若用户提到这些场馆，intent 可设为 CASINO_RULE。` : '';
 
@@ -552,31 +593,37 @@ function App() {
 
            const triageMessages = [ { role: 'system', content: 'You are a JSON extractor for Risk Control.' }, { role: 'user', content: triagePrompt } ];
            
-           let triageResult = { core_intent: "OTHER", matched_venue: null, noise_detected: [], extracted_order_id: null };
+           let triageResult = {
+               core_intent: inferIntentHeuristically(currentUserMsg, directVenueMatch, likelyOrderId, currentImages.length > 0),
+               matched_venue: directVenueMatch?.name || null,
+               noise_detected: [],
+               extracted_order_id: likelyOrderId,
+           };
 
-           if (currentImages.length === 0) {
+           if (runTriage) {
+               setAiPhase('triage');
                const tRes = await callGeminiJSON(triageMessages, 0.1, MODE_FAST);
                if (tRes.success && tRes.data) { triageResult = { ...triageResult, ...tRes.data }; }
-           } else {
-               triageResult.core_intent = "IMAGE_ANALYSIS";
            }
 
            // 场馆规则：移到 System Prompt 走 Gemini Context Cache（server.js 对 >2000字 systemInstruction 自动建缓存, TTL 1小时）
            // 这里只做一个"命中提示"，让 AI 重点关注对应章节，不再作为唯一注入源
            let venueHitHint = "";
-           if (triageResult.matched_venue && venueRules.length > 0) {
-               const mv = triageResult.matched_venue.toLowerCase();
-               const matched = venueRules.find(v => (v.name || '').toLowerCase().includes(mv) || mv.includes((v.name || '').toLowerCase()));
-               if (matched) {
-                   venueHitHint = `\n- 🎯 已命中场馆【${matched.name}】：请在 System Prompt 的《场馆规则库》中定位该场馆章节，严格按其条款回答。`;
-               }
+           const matchedVenue = triageResult.matched_venue && venueRules.length > 0
+               ? venueRules.find(v => {
+                   const mv = triageResult.matched_venue.toLowerCase();
+                   return (v.name || '').toLowerCase().includes(mv) || mv.includes((v.name || '').toLowerCase());
+               }) || directVenueMatch
+               : directVenueMatch;
+           if (matchedVenue) {
+               venueHitHint = `\n- 🎯 已命中场馆【${matchedVenue.name}】：请严格按对应条款回答。`;
            }
 
            let betContext = "";
            let noticeContext = "";
            let currentTicketRes = null;
 
-           const orderIdMatch = triageResult.extracted_order_id || currentUserMsg.match(/5\d{15,19}/)?.[0];
+           const orderIdMatch = triageResult.extracted_order_id || likelyOrderId;
            if (orderIdMatch) {
                const ticketRes = await DBS_API.queryTicket(orderIdMatch);
                if (ticketRes.success) {
@@ -623,14 +670,8 @@ function App() {
            const currentScriptLib = scripts.map(s => `[${s.keywords || '通用'}]: ${s.content}`).join("\n");
            const hiddenDocs = extraKnowledge.map(k => `[${k.keywords}]: ${k.content}`).join("\n");
 
-           // 场馆规则全量塞进 System Prompt —— 后端 server.js 对 >2000字 systemInstruction 自动建立 30 天长效缓存，
-           // 命中后场馆规则这部分按缓存价计费（约为原价的 1/4），不会因场馆多而推高单次成本。
-           const venueLib = venueRules
-               .filter(v => v.rules && v.rules.trim())
-               .map(v => `#### 【${v.name}】\n${v.rules}`)
-               .join("\n\n---\n\n");
-           const venueSection = venueLib
-               ? `\n\n### 场馆规则库 (Venue Rules — 全量权威条款，回答规则类问题时必须定位并照抄相关条款)\n${venueLib}`
+           const venueSection = matchedVenue?.rules?.trim()
+               ? `\n\n### 命中场馆规则 (Venue Rules — 仅注入当前相关场馆)\n#### 【${matchedVenue.name}】\n${matchedVenue.rules}`
                : '';
 
            const staticSystemPrompt = `
@@ -687,20 +728,20 @@ function App() {
                const cleanText = fullText.replace("<<<ACTION_TRACK>>>", "");
                setAiReply(cleanText); 
                if (cleanText.trim()) {
-                   updateAssistantMessage(cleanText, currentImages.length===0 ? triageResult : null);
+                   updateAssistantMessage(cleanText, runTriage ? triageResult : null);
                }
            }, MODE_FAST);
 
            if (res.error) {
                const errMsg = "AI Error: " + res.error;
                setAiReply(errMsg);
-               finalizeAssistantMessage(errMsg, currentImages.length===0 ? triageResult : null);
+               finalizeAssistantMessage(errMsg, runTriage ? triageResult : null);
            } else if (res.success && res.data) {
-               finalizeAssistantMessage(res.data, currentImages.length===0 ? triageResult : null);
+               finalizeAssistantMessage(res.data, runTriage ? triageResult : null);
            } else {
                const fallbackMsg = 'AI 请求已结束，但没有得到明确结果。请稍后重试，或查看 Vercel 日志确认是否发生函数超时。';
                setAiReply(fallbackMsg);
-               finalizeAssistantMessage(fallbackMsg, currentImages.length===0 ? triageResult : null);
+               finalizeAssistantMessage(fallbackMsg, runTriage ? triageResult : null);
            }
            if (res.usage) setLastUsage(res.usage);
           if (res.cacheAction) setLastCacheMeta({ action: res.cacheAction, model: res.cacheModel, thinkingLevel: res.thinkingLevel });
@@ -848,6 +889,41 @@ const handleUploadImage = async () => { updateActivity(); if (!imageForm.file ||
     }, []);
 
     const handleCopy = React.useCallback((text) => { updateActivity(); navigator.clipboard.writeText(text); setNotification({title:'复制成功', message:'', type:'success'}); }, []);
+    const showImageCopyToast = React.useCallback((message, type = 'success') => {
+        setImageCopyToast({ message, type });
+        window.clearTimeout(window.__hajimiImageCopyToastTimer);
+        window.__hajimiImageCopyToastTimer = window.setTimeout(() => {
+            setImageCopyToast(null);
+        }, 1400);
+    }, []);
+    const handleCopyImage = React.useCallback(async (image) => {
+        updateActivity();
+        if (!image?.id) return;
+        if (typeof ClipboardItem === 'undefined' || !navigator.clipboard?.write) {
+            showImageCopyToast('当前浏览器不支持直接复制图片', 'error');
+            return;
+        }
+
+        setCopyingImage(true);
+        try {
+            const response = await fetch(`/api/images/${image.id}`);
+            if (!response.ok) {
+                throw new Error('图片读取失败');
+            }
+
+            const blob = await response.blob();
+            await navigator.clipboard.write([
+                new ClipboardItem({
+                    [blob.type || 'image/png']: blob,
+                }),
+            ]);
+            showImageCopyToast('图片已复制到剪贴板');
+        } catch (e) {
+            showImageCopyToast(e.message || '暂时无法复制图片', 'error');
+        } finally {
+            setCopyingImage(false);
+        }
+    }, [showImageCopyToast]);
     const handleCopyScript = (content, id) => { updateActivity(); navigator.clipboard.writeText(content); setCopiedScriptId(id); setSearchTerm(''); setTimeout(() => setCopiedScriptId(null), 1000); };
     const handleAnnFeedback = async (type) => { updateActivity(); if (type === 'bad' && !annCorrectReason.trim()) return setNotification({title: '提示', message: '请填写原因', type: 'error'}); setAnnSubmitStatus('sending'); try { await window.fbOps.saveAnnFeedback({ raw: rawNotice, ...genResult, type, reason: type==='good'?'Keep':annCorrectReason }); setAnnSubmitStatus(type === 'good' ? 'success_good' : 'success_bad'); if(type === 'bad') setAnnCorrectReason(''); setTimeout(() => setAnnSubmitStatus('idle'), 3000); } catch (e) { setNotification({title: '反馈失败', message: e.message, type: 'error'}); setAnnSubmitStatus('idle'); } };
     
@@ -1556,10 +1632,18 @@ ${accumulated ? accumulated.substring(0, 12000) : '(当前场馆无已有规则)
         {/* 图片预览及复制快捷按钮模态框 */}
         {viewImage && (
            <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-sm flex flex-col items-center justify-center p-4 fade-in" onClick={() => setViewImage(null)}>
+               {imageCopyToast && (
+                   <div className={`absolute top-6 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full text-sm font-bold shadow-xl border transition-all ${imageCopyToast.type === 'error' ? 'bg-red-500/90 text-white border-red-300/40' : 'bg-emerald-500/90 text-white border-emerald-300/40'}`} onClick={e => e.stopPropagation()}>
+                       {imageCopyToast.message}
+                   </div>
+               )}
                <img src={`/api/images/${viewImage.id}`} className="max-w-full max-h-[70vh] object-contain shadow-2xl rounded-lg" onClick={(e) => e.stopPropagation()} />
                <div className="mt-4 bg-white/10 border border-white/10 backdrop-blur text-white px-6 py-3 rounded-2xl text-sm flex flex-col items-center gap-2 shadow-2xl" onClick={e => e.stopPropagation()}>
                    <span className="font-bold text-blue-200 text-lg">{viewImage.title || '未命名图片'}</span>
                    <div className="flex gap-2">
+                       <button onClick={() => { handleCopyImage(viewImage); }} disabled={copyingImage} className="bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-white px-4 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1">
+                           <Icon d={PATHS.Copy} className="w-3 h-3" /> {copyingImage ? '复制中...' : '复制图片'}
+                       </button>
                        <button onClick={() => { handleCopy(viewImage.title); }} className="bg-zinc-800 hover:bg-zinc-700 text-white px-4 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1">
                            <Icon d={PATHS.Copy} className="w-3 h-3" /> 复制快捷
                        </button>
@@ -1755,7 +1839,7 @@ ${accumulated ? accumulated.substring(0, 12000) : '(当前场馆无已有规则)
                             </span>
                             {viewTemplate && <button onClick={() => { setViewTemplate(null); setSelectedGenTemplateId(''); }} className="text-indigo-600 hover:underline">取消选择</button>}
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 flex-1">{[{ k: 'front', t: '前台公告', cls:'notice-card-front', ic:'text-pink-500' }, { k: 'mail', t: '站内信', cls:'notice-card-mail', ic:'text-blue-500' }, { k: 'inner', t: '对内公告', cls:'notice-card-inner', ic:'text-violet-500' }].map(item => (<div key={item.k} className={`panel ${item.cls} flex flex-col overflow-hidden min-h-[150px] ${genResult && genResult[item.k] && genResult[item.k].startsWith('❌') ? 'error-result' : ''}`}><div className="panel-head"><span className="flex items-center gap-2"><Icon d={PATHS.Edit} className={`w-3.5 h-3.5 ${item.ic}`}/>{item.t}</span><button onClick={() => genResult && handleCopy(genResult[item.k])} className="text-indigo-600 hover:text-indigo-800 text-xs px-2 py-1 rounded hover:bg-indigo-50">复制</button></div><textarea className="notice-textarea" value={genResult ? genResult[item.k] : ''} onChange={(e) => setGenResult({...genResult, [item.k]: e.target.value})} placeholder="等待生成..."></textarea></div>))}</div>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 flex-1">{[{ k: 'front', t: '前台公告', cls:'notice-card-front', ic:'text-pink-500' }, { k: 'mail', t: '站内信', cls:'notice-card-mail', ic:'text-blue-500' }, { k: 'inner', t: '对内公告', cls:'notice-card-inner', ic:'text-violet-500' }].map(item => (<div key={item.k} className={`panel ${item.cls} flex flex-col overflow-hidden min-h-[150px] ${genResult && genResult[item.k] && genResult[item.k].startsWith('❌') ? 'error-result' : ''}`}><div className="panel-head"><span className="flex items-center gap-2"><Icon d={PATHS.Edit} className={`w-3.5 h-3.5 ${item.ic}`}/>{item.t}</span><button onClick={() => genResult && handleCopy(genResult[item.k])} className="text-indigo-600 hover:text-indigo-800 text-xs px-2 py-1 rounded hover:bg-indigo-50">复制</button></div><div className="notice-result custom-scrollbar">{genResult ? genResult[item.k] : '等待生成...'}</div></div>))}</div>
                           {genResult && (<div className="panel p-4 flex flex-col gap-3"><div className="text-sm font-bold text-slate-700 flex items-center gap-2"><Icon d={PATHS.Edit} className="text-orange-500"/> 结果评价</div><div className="flex flex-col md:flex-row gap-2"><button onClick={() => handleAnnFeedback('good')} disabled={annSubmitStatus.startsWith('success') || annSubmitStatus === 'sending'} className={`flex-1 py-2 rounded-lg text-xs font-bold text-white transition-all transform ${annSubmitStatus==='success_good' ? 'scale-105' : ''}`} style={{background: annSubmitStatus==='success_good' ? 'linear-gradient(135deg,#10b981,#059669)' : 'linear-gradient(135deg,#10b981,#059669)', boxShadow:'0 6px 14px -4px rgba(16,185,129,0.45)'}}>{annSubmitStatus==='success_good' ? '✅ 已学习' : '完美 (Keep)'}</button><div className="flex-1 flex gap-2"><textarea className="flex-1 main-input text-xs resize-none" placeholder="如有问题，请填写修正原因..." value={annCorrectReason} onChange={e => setAnnCorrectReason(e.target.value)}></textarea><button onClick={() => handleAnnFeedback('bad')} disabled={annSubmitStatus.startsWith('success') || annSubmitStatus === 'sending'} className={`px-4 py-2 rounded-lg text-xs font-bold text-white transition-all transform ${annSubmitStatus==='success_bad' ? 'scale-105' : ''}`} style={{background:'linear-gradient(135deg,#f43f5e,#e11d48)', boxShadow:'0 6px 14px -4px rgba(244,63,94,0.45)'}}>{annSubmitStatus==='success_bad' ? '✅ 已学习' : '提交修正'}</button></div></div></div>)}
                       </div>
                   </div>
