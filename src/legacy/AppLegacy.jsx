@@ -491,6 +491,44 @@ function App() {
         setActiveMsgIndex(-1);
     };
 
+    const extractLikelyOrderId = React.useCallback((text) => {
+        if (typeof text !== 'string') return null;
+        const trimmed = text.trim();
+        if (/^5\d{15,19}$/.test(trimmed)) return trimmed;
+
+        if (!/(注单|订单|单号|單號|order|ticket)/i.test(text)) return null;
+        const match = text.match(/(^|[^0-9])(5\d{15,19})(?!\d)/);
+        return match?.[2] || null;
+    }, []);
+
+    const findDirectVenueMatch = React.useCallback((text) => {
+        const normalized = (text || '').toLowerCase();
+        if (!normalized) return null;
+        return venueRules.find(v => {
+            const name = (v.name || '').trim().toLowerCase();
+            return name && normalized.includes(name);
+        }) || null;
+    }, [venueRules]);
+
+    const shouldRunTriage = React.useCallback((text, directVenue, orderId) => {
+        if (orderId || directVenue) return true;
+        if (typeof text !== 'string') return false;
+
+        return /(账号|被盗|风控|封号|冻结|充值|到账|彩金|优惠|活动|注单|订单|赛事|结算|串关|连串|盘口|赔率|走水|赢半|输半|规则|场馆|真人|电子|体育|公告|取消|拒单|无效)/i.test(text);
+    }, []);
+
+    const inferIntentHeuristically = React.useCallback((text, directVenue, orderId, hasImages) => {
+        if (hasImages) return 'IMAGE_ANALYSIS';
+        if (directVenue) return 'CASINO_RULE';
+        if (orderId) return 'GAME_RESULT';
+        if (/(账号.*(被盗|异常)|被盗|盗号|安全)/i.test(text)) return 'ACCOUNT_SECURITY';
+        if (/(封号|冻结|风控|限制登录)/i.test(text)) return 'ACCOUNT_LOCK';
+        if (/(充值|存款|入款|到账|未到帐|未到账)/i.test(text)) return 'DEPOSIT_ISSUE';
+        if (/(彩金|优惠|活动|奖励|返水)/i.test(text)) return 'PROMO_CLAIM';
+        if (/(体育|盘口|让分|大小球|滚球|赛果|结算|串关|连串|赔率)/i.test(text)) return 'SPORT_RULE';
+        return 'OTHER';
+    }, []);
+
     const handleCallAI = async () => { 
         updateActivity(); 
         if (!customerInput.trim() && pastedImages.length === 0) return; 
@@ -533,8 +571,9 @@ function App() {
         };
 
         try {
-           setAiPhase('triage');
-           
+           const directVenueMatch = findDirectVenueMatch(currentUserMsg);
+           const likelyOrderId = extractLikelyOrderId(currentUserMsg);
+           const runTriage = currentImages.length === 0 && shouldRunTriage(currentUserMsg, directVenueMatch, likelyOrderId);
            const venueNames = venueRules.map(v => v.name).filter(Boolean);
            const venueListHint = venueNames.length > 0 ? `当前已收录的场馆有：${venueNames.join('、')}。若用户提到这些场馆，intent 可设为 CASINO_RULE。` : '';
 
@@ -554,31 +593,37 @@ function App() {
 
            const triageMessages = [ { role: 'system', content: 'You are a JSON extractor for Risk Control.' }, { role: 'user', content: triagePrompt } ];
            
-           let triageResult = { core_intent: "OTHER", matched_venue: null, noise_detected: [], extracted_order_id: null };
+           let triageResult = {
+               core_intent: inferIntentHeuristically(currentUserMsg, directVenueMatch, likelyOrderId, currentImages.length > 0),
+               matched_venue: directVenueMatch?.name || null,
+               noise_detected: [],
+               extracted_order_id: likelyOrderId,
+           };
 
-           if (currentImages.length === 0) {
+           if (runTriage) {
+               setAiPhase('triage');
                const tRes = await callGeminiJSON(triageMessages, 0.1, MODE_FAST);
                if (tRes.success && tRes.data) { triageResult = { ...triageResult, ...tRes.data }; }
-           } else {
-               triageResult.core_intent = "IMAGE_ANALYSIS";
            }
 
            // 场馆规则：移到 System Prompt 走 Gemini Context Cache（server.js 对 >2000字 systemInstruction 自动建缓存, TTL 1小时）
            // 这里只做一个"命中提示"，让 AI 重点关注对应章节，不再作为唯一注入源
            let venueHitHint = "";
-           if (triageResult.matched_venue && venueRules.length > 0) {
-               const mv = triageResult.matched_venue.toLowerCase();
-               const matched = venueRules.find(v => (v.name || '').toLowerCase().includes(mv) || mv.includes((v.name || '').toLowerCase()));
-               if (matched) {
-                   venueHitHint = `\n- 🎯 已命中场馆【${matched.name}】：请在 System Prompt 的《场馆规则库》中定位该场馆章节，严格按其条款回答。`;
-               }
+           const matchedVenue = triageResult.matched_venue && venueRules.length > 0
+               ? venueRules.find(v => {
+                   const mv = triageResult.matched_venue.toLowerCase();
+                   return (v.name || '').toLowerCase().includes(mv) || mv.includes((v.name || '').toLowerCase());
+               }) || directVenueMatch
+               : directVenueMatch;
+           if (matchedVenue) {
+               venueHitHint = `\n- 🎯 已命中场馆【${matchedVenue.name}】：请严格按对应条款回答。`;
            }
 
            let betContext = "";
            let noticeContext = "";
            let currentTicketRes = null;
 
-           const orderIdMatch = triageResult.extracted_order_id || currentUserMsg.match(/5\d{15,19}/)?.[0];
+           const orderIdMatch = triageResult.extracted_order_id || likelyOrderId;
            if (orderIdMatch) {
                const ticketRes = await DBS_API.queryTicket(orderIdMatch);
                if (ticketRes.success) {
@@ -625,14 +670,8 @@ function App() {
            const currentScriptLib = scripts.map(s => `[${s.keywords || '通用'}]: ${s.content}`).join("\n");
            const hiddenDocs = extraKnowledge.map(k => `[${k.keywords}]: ${k.content}`).join("\n");
 
-           // 场馆规则全量塞进 System Prompt —— 后端 server.js 对 >2000字 systemInstruction 自动建立 30 天长效缓存，
-           // 命中后场馆规则这部分按缓存价计费（约为原价的 1/4），不会因场馆多而推高单次成本。
-           const venueLib = venueRules
-               .filter(v => v.rules && v.rules.trim())
-               .map(v => `#### 【${v.name}】\n${v.rules}`)
-               .join("\n\n---\n\n");
-           const venueSection = venueLib
-               ? `\n\n### 场馆规则库 (Venue Rules — 全量权威条款，回答规则类问题时必须定位并照抄相关条款)\n${venueLib}`
+           const venueSection = matchedVenue?.rules?.trim()
+               ? `\n\n### 命中场馆规则 (Venue Rules — 仅注入当前相关场馆)\n#### 【${matchedVenue.name}】\n${matchedVenue.rules}`
                : '';
 
            const staticSystemPrompt = `
@@ -689,20 +728,20 @@ function App() {
                const cleanText = fullText.replace("<<<ACTION_TRACK>>>", "");
                setAiReply(cleanText); 
                if (cleanText.trim()) {
-                   updateAssistantMessage(cleanText, currentImages.length===0 ? triageResult : null);
+                   updateAssistantMessage(cleanText, runTriage ? triageResult : null);
                }
            }, MODE_FAST);
 
            if (res.error) {
                const errMsg = "AI Error: " + res.error;
                setAiReply(errMsg);
-               finalizeAssistantMessage(errMsg, currentImages.length===0 ? triageResult : null);
+               finalizeAssistantMessage(errMsg, runTriage ? triageResult : null);
            } else if (res.success && res.data) {
-               finalizeAssistantMessage(res.data, currentImages.length===0 ? triageResult : null);
+               finalizeAssistantMessage(res.data, runTriage ? triageResult : null);
            } else {
                const fallbackMsg = 'AI 请求已结束，但没有得到明确结果。请稍后重试，或查看 Vercel 日志确认是否发生函数超时。';
                setAiReply(fallbackMsg);
-               finalizeAssistantMessage(fallbackMsg, currentImages.length===0 ? triageResult : null);
+               finalizeAssistantMessage(fallbackMsg, runTriage ? triageResult : null);
            }
            if (res.usage) setLastUsage(res.usage);
           if (res.cacheAction) setLastCacheMeta({ action: res.cacheAction, model: res.cacheModel, thinkingLevel: res.thinkingLevel });
