@@ -46,7 +46,7 @@ export function LoginScreen({ onLogin }) {
             <div className="login-card fade-in">
                 <div className="login-card__logo-wrap">
                     <div className="login-card__logo-inner">
-                        <img src="/logo.png" className="w-full h-full object-contain" alt="logo" />
+                        <img src="https://lh3.googleusercontent.com/d/1Rri7vVK9YyhQEdqzvgmjQ4kzNZdbQuxV" className="w-full h-full object-contain rounded-2xl" onError={(e) => { e.target.src = "https://via.placeholder.com/64?text=Cat" }} />
                     </div>
                 </div>
                 <h2 className="login-card__title">Welcome back!</h2>
