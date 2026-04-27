@@ -1,24 +1,25 @@
 /* ============================================================
-   哈基米助手 · 现代设计系统 (Modern Design System)
-   灵感：GitHub Primer / Linear / Tailwind UI
+   哈基米助手 · 现代设计系统 v2 (Linear / Vercel / Notion 风)
+   原则: 单一强调色 / 2 层阴影 / 8px 间距 / 紧凑圆角
    ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
-  /* 中性色 */
+  /* 中性色 — 偏冷灰 */
   --white: #ffffff;
-  --bg: #f6f8fc;
-  --bg-soft: #eef1f7;
+  --bg: #fafbfc;
+  --bg-soft: #f4f5f7;
   --surface: #ffffff;
-  --surface-alt: #fafbff;
-  --border: #e4e7ee;
-  --border-strong: #cfd4dd;
-  --ink-900: #0f172a;
-  --ink-700: #334155;
-  --ink-500: #64748b;
-  --ink-400: #94a3b8;
-  --ink-300: #cbd5e1;
+  --surface-alt: #fafbfc;
+  --border: #e5e7eb;
+  --border-strong: #d1d5db;
+  --ink-900: #09090b;
+  --ink-700: #27272a;
+  --ink-500: #71717a;
+  --ink-400: #a1a1aa;
+  --ink-300: #d4d4d8;
 
-  /* 主色 (Brand Indigo → Violet) */
+  /* 主色 (单一 Brand Indigo) */
   --brand: #6366f1;
   --brand-light: #eef2ff;
   --brand-dark: #4f46e5;
@@ -58,20 +59,20 @@
   --cat-8: #ec4899;     /* 粉 */
   --cat-8-bg: #fdf2f8;
 
-  /* 阴影 */
+  /* 阴影 — 2 层为主, 收敛 */
   --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
-  --shadow: 0 1px 3px rgba(15, 23, 42, 0.07), 0 1px 2px rgba(15, 23, 42, 0.04);
-  --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.07), 0 2px 4px -2px rgba(15, 23, 42, 0.05);
-  --shadow-lg: 0 10px 20px -4px rgba(15, 23, 42, 0.1), 0 4px 8px -4px rgba(15, 23, 42, 0.06);
-  --shadow-xl: 0 20px 40px -8px rgba(99, 102, 241, 0.18);
-  --shadow-brand: 0 6px 20px -6px rgba(99, 102, 241, 0.45);
+  --shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.06);
+  --shadow-md: 0 2px 4px rgba(15, 23, 42, 0.05), 0 4px 8px rgba(15, 23, 42, 0.06);
+  --shadow-lg: 0 8px 16px -4px rgba(15, 23, 42, 0.08), 0 4px 8px -4px rgba(15, 23, 42, 0.04);
+  --shadow-xl: 0 16px 32px -8px rgba(15, 23, 42, 0.12);
+  --shadow-brand: 0 4px 12px -2px rgba(99, 102, 241, 0.35);
 
-  /* 圆角 */
+  /* 圆角 — Linear 紧凑风 */
   --r-sm: 6px;
-  --r: 10px;
-  --r-md: 12px;
-  --r-lg: 16px;
-  --r-xl: 22px;
+  --r: 8px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --r-xl: 18px;
 }
 
 /* ===== 基础 ===== */
@@ -79,13 +80,17 @@
 html, body {
   margin: 0;
   padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro SC", "PingFang SC", "Microsoft YaHei", "Segoe UI", Roboto, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Segoe UI", Roboto, sans-serif;
+  font-feature-settings: 'cv11', 'ss01', 'ss03';
   background: var(--bg);
   color: var(--ink-700);
   line-height: 1.55;
+  letter-spacing: -0.01em;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   overscroll-behavior: none;
 }
+h1, h2, h3, h4 { letter-spacing: -0.02em; }
 
 /* ===== 登录页 —— 液态玻璃 ===== */
 .login-bg {
@@ -364,22 +369,9 @@ html, body {
   animation: listStaggerIn 0.32s ease-out both;
 }
 
-/* 按钮涟漪效果 */
+/* 按钮 — 移除涟漪, 保持简洁 */
 .btn-primary, .tpl-save-btn, .tpl-mode-pill.gen {
   position: relative;
-  overflow: hidden;
-}
-.btn-primary::before, .tpl-save-btn::before, .tpl-mode-pill.gen::before {
-  content: '';
-  position: absolute;
-  top: 0; left: -100%;
-  width: 60%; height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-  transition: left 0.6s ease;
-  pointer-events: none;
-}
-.btn-primary:hover::before, .tpl-save-btn:hover::before, .tpl-mode-pill.gen:hover::before {
-  left: 120%;
 }
 
 /* ===== 滚动条 ===== */
@@ -394,46 +386,50 @@ html, body {
   background: linear-gradient(180deg, #a5b4fc, #818cf8);
 }
 
-/* ===== 按钮 ===== */
+/* ===== 按钮 — Linear/Vercel 风 ===== */
 .btn-primary {
-  background: var(--brand-grad);
-  background-size: 200% 100%;
+  background: var(--brand);
   color: white;
-  border: none;
-  padding: 9px 16px;
+  border: 1px solid transparent;
+  padding: 8px 14px;
   border-radius: var(--r);
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
+  letter-spacing: -0.01em;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  box-shadow: var(--shadow-brand);
-  transition: all 0.25s;
+  height: 36px;
+  box-shadow: var(--shadow-sm);
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
 }
 .btn-primary:hover {
-  background-position: 100% 0%;
-  transform: translateY(-1px);
-  box-shadow: 0 10px 24px -6px rgba(99, 102, 241, 0.55);
+  background: var(--brand-dark);
+  box-shadow: var(--shadow-brand);
 }
-.btn-primary:active { transform: translateY(0) scale(0.98); }
-.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+.btn-primary:active { background: var(--brand-deep); box-shadow: var(--shadow-sm); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; background: var(--brand); box-shadow: none; }
 
 .btn-secondary {
   background: var(--surface);
   color: var(--ink-700);
   border: 1px solid var(--border);
-  padding: 8px 14px;
+  padding: 7px 14px;
   border-radius: var(--r);
   font-size: 13px;
   font-weight: 500;
+  letter-spacing: -0.01em;
+  height: 36px;
   cursor: pointer;
-  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 .btn-secondary:hover {
-  border-color: var(--brand);
-  color: var(--brand-dark);
-  background: var(--brand-light);
+  border-color: var(--border-strong);
+  background: var(--bg-soft);
 }
 
 .btn-icon-only {
@@ -445,7 +441,7 @@ html, body {
   border-radius: var(--r);
   background: transparent;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background-color 0.15s ease, color 0.15s ease;
   display: inline-flex;
   flex: 0 0 32px;
   align-items: center;
@@ -454,8 +450,8 @@ html, body {
 }
 .btn-icon-only > * { flex-shrink: 0; }
 .btn-icon-only:hover {
-  background: var(--brand-light);
-  color: var(--brand-dark);
+  background: var(--bg-soft);
+  color: var(--ink-900);
 }
 
 /* ===== 输入 ===== */
@@ -1569,59 +1565,60 @@ html, body {
   box-shadow: var(--shadow-lg);
 }
 
-/* ===== 应用头部 (彩色) ===== */
+/* ===== 应用头部 — 扁平 ===== */
 .app-header {
-  background: linear-gradient(180deg, #ffffff 0%, #fafbff 100%);
+  background: var(--surface);
   border-bottom: 1px solid var(--border);
-  box-shadow: 0 1px 0 rgba(15, 23, 42, 0.03);
 }
 .app-brand {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-weight: 700;
+  gap: 10px;
+  font-weight: 600;
   font-size: 14px;
+  letter-spacing: -0.02em;
   color: var(--ink-900);
 }
 .app-brand .dot-grad {
   width: 8px; height: 8px;
   border-radius: 50%;
-  background: var(--brand-grad);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  background: var(--brand);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
 }
 
-/* 主标签页 pills */
+/* 主标签页 pills — 单色统一 */
 .tab-pills {
   display: inline-flex;
-  background: #f1f4fa;
-  border-radius: 999px;
+  background: var(--bg-soft);
+  border-radius: var(--r);
   padding: 3px;
   gap: 2px;
 }
 .tab-pill {
   padding: 6px 14px;
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
   color: var(--ink-500);
-  border-radius: 999px;
+  border-radius: 6px;
   border: none;
   background: transparent;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: color 0.15s ease, background-color 0.15s ease;
   white-space: nowrap;
   display: inline-flex;
   align-items: center;
   gap: 5px;
 }
-.tab-pill:hover { color: var(--brand-dark); }
+.tab-pill:hover { color: var(--ink-900); }
 .tab-pill.active {
   background: var(--white);
-  color: var(--brand-dark);
-  box-shadow: var(--shadow), 0 0 0 1px rgba(99, 102, 241, 0.08);
+  color: var(--ink-900);
+  box-shadow: var(--shadow-sm);
 }
-.tab-pill.active.pill-scripts  { color: #7c3aed; box-shadow: var(--shadow), 0 0 0 1px #ddd6fe; }
-.tab-pill.active.pill-images   { color: #0891b2; box-shadow: var(--shadow), 0 0 0 1px #a5f3fc; }
-.tab-pill.active.pill-notice   { color: #db2777; box-shadow: var(--shadow), 0 0 0 1px #fbcfe8; }
+.tab-pill.active.pill-scripts,
+.tab-pill.active.pill-images,
+.tab-pill.active.pill-notice { color: var(--ink-900); box-shadow: var(--shadow-sm); }
 
 /* 次级工具条按钮 (更新AI / 数据备份等) */
 .tool-btn {
