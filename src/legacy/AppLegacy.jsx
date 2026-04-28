@@ -522,6 +522,21 @@ function App() {
         return 'OTHER';
     }, []);
 
+    const isInternalDraftRequest = React.useCallback((latestText, history = []) => {
+        const latest = typeof latestText === 'string' ? latestText : '';
+        if (/(话术|怎么回|如何回|帮我回|给我.*回复|重新写|改写|润色|按照.*回|根据.*写|直接回|客服不继续|不继续.*服务|不给.*娱乐)/i.test(latest)) {
+            return true;
+        }
+
+        const recentUserText = history
+            .slice(-8)
+            .filter(msg => msg.role === 'user')
+            .map(msg => msg.displayContent || (typeof msg.content === 'string' ? msg.content : ''))
+            .join('\n');
+
+        return /(话术|怎么回|如何回|帮我回|给我.*回复|重新写|改写|润色|按照.*回|根据.*写|直接回)/i.test(recentUserText);
+    }, []);
+
     const handleCallAI = async (modeOverride = chatPromptMode) => {
         updateActivity(); 
         if (!customerInput.trim() && pastedImages.length === 0) return; 
@@ -606,6 +621,7 @@ function App() {
            const directVenueMatch = findDirectVenueMatch(currentUserMsg);
            const likelyOrderId = extractLikelyOrderId(currentUserMsg);
            const runTriage = currentImages.length === 0 && shouldRunTriage(currentUserMsg, directVenueMatch, likelyOrderId);
+           const internalDraftRequest = isInternalDraftRequest(currentUserMsg, currentFullHistory);
            const venueNames = venueRules.map(v => v.name).filter(Boolean);
            const venueListHint = venueNames.length > 0 ? `当前已收录的场馆有：${venueNames.join('、')}。若用户提到这些场馆，intent 可设为 CASINO_RULE。` : '';
 
@@ -683,6 +699,7 @@ function App() {
            let dynamicContext = `
            【系统情报 (Triage Intelligence)】：
            - AI 初步判定诉求为：${triageResult.core_intent}
+           - 当前任务类型：${internalDraftRequest ? '运营内部话术生成/改写' : '业务问题回复'}
            - 命中场馆：${triageResult.matched_venue || '无'}${venueHitHint}
            - 需注意过滤的用户噪音：${triageResult.noise_detected?.length > 0 ? triageResult.noise_detected.join(', ') : '无'}
            - 客观注单数据（如有）：${betContext || '无'}
@@ -690,6 +707,18 @@ function App() {
 
            *注意：请结合用户原始输入、客观注单数据、公告和 RAG 命中内容回复。不要暴露你的思考过程，直接给出可复制到群里的回复。如果注单未结算，在结尾加入 <<<ACTION_TRACK>>> 触发监控。涉及场馆规则、盘口规则、赔率计算、结算细则的问题，必须优先依据命中的知识条款；没有命中可靠条款时，不要编造，改为要求补充注单号、场馆、玩法、截图或转人工核实。*
            `;
+
+           if (internalDraftRequest) {
+               dynamicContext += `
+
+           【内部话术生成规则】：
+           - 当前用户是运营人员在要求生成或改写话术，不是会员本人在咨询。
+           - 只输出最终可直接发送到群里的话术，不要写“建议话术如下”“请参考以下话术”。
+           - 不要再引导“联系在线客服”“以在线客服为准”“尝试申诉或核验”，除非用户最新输入明确要求这么引导，或 RAG 条款明确该业务必须走在线客服。
+           - 历史对话中的 assistant 回复可能是错误草稿，只能作为反面上下文；必须以用户最新纠正和最新要求为准。
+           - 如果用户明确说没有核验流程、客服不继续服务、不再提供娱乐服务，就按这个方向写克制、职业、结案式回复。
+           `;
+           }
 
            let ragContext = { domain: 'general_policy', retrievalMode: 'none', results: [], prompt: '无' };
            try {
