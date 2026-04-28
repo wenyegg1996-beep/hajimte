@@ -514,7 +514,7 @@ function App() {
         if (orderId || directVenue) return true;
         if (typeof text !== 'string') return false;
 
-        return /(账号|被盗|风控|封号|冻结|充值|到账|彩金|优惠|活动|注单|订单|赛事|结算|串关|连串|盘口|赔率|走水|赢半|输半|规则|场馆|真人|电子|体育|公告|取消|拒单|无效)/i.test(text);
+        return /(账号|被盗|风控|封号|冻结|充值|到账|彩金|优惠|活动|补偿|赔偿|补发|安抚|慰问|注单|订单|赛事|结算|串关|连串|盘口|赔率|走水|赢半|输半|规则|场馆|真人|电子|体育|公告|取消|拒单|无效)/i.test(text);
     }, []);
 
     const inferIntentHeuristically = React.useCallback((text, directVenue, orderId, hasImages) => {
@@ -524,7 +524,7 @@ function App() {
         if (/(账号.*(被盗|异常)|被盗|盗号|安全)/i.test(text)) return 'ACCOUNT_SECURITY';
         if (/(封号|冻结|风控|限制登录)/i.test(text)) return 'ACCOUNT_LOCK';
         if (/(充值|存款|入款|到账|未到帐|未到账)/i.test(text)) return 'DEPOSIT_ISSUE';
-        if (/(彩金|优惠|活动|奖励|返水)/i.test(text)) return 'PROMO_CLAIM';
+        if (/(彩金|优惠|活动|奖励|返水|补偿|赔偿|补发|安抚|慰问)/i.test(text)) return 'PROMO_CLAIM';
         if (/(体育|盘口|让分|大小球|滚球|赛果|结算|串关|连串|赔率)/i.test(text)) return 'SPORT_RULE';
         return 'OTHER';
     }, []);

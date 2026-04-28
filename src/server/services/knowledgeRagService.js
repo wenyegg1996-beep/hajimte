@@ -10,7 +10,7 @@ const DOMAIN_DEFINITIONS = [
   { domain: 'sports_rules', keywords: ['盘口', '滚球', '大小球', '让球', '串关', '连串', '赔率', '派彩', '走水', '波胆', '规则'] },
   { domain: 'sports_settlement', keywords: ['结算', '赛果', '注单', '赛事中断', '取消', '危险球', '提前结算', '未结算'] },
   { domain: 'venue_issue', keywords: ['场馆', '真人', '电子', '维护', '无法进入', '转账失败', '负数', '余额'] },
-  { domain: 'promo_activity', keywords: ['活动', '彩金', '红包雨', '返水', '优惠', '礼金', '升级', '生日礼金'] },
+  { domain: 'promo_activity', keywords: ['活动', '彩金', '红包雨', '返水', '优惠', '礼金', '升级', '生日礼金', '补偿', '补偿金', '赔偿', '补发', '安抚', '慰问'] },
   { domain: 'risk_control', keywords: ['风控', '审计', '冻结', '封号', '异常投注', '违规', '复审', '套利'] },
   { domain: 'internal_template', keywords: ['模板', '报备', '申请', '拉白', '下分', '代注册', '复审模板'] },
   { domain: 'general_policy', keywords: ['条款', '隐私', '规则与条款', '免责声明', '使用条件'] },
@@ -338,38 +338,56 @@ export async function retrieveKnowledgeContext({ query, coreIntent = '', venue =
     ? explicitDomain
     : inferDomainFromText(query);
 
-  let textResults = [];
-  let vectorResults = [];
-  let retrievalMode = 'fallback';
+  const runRetrieval = async (domain) => {
+    let textResults = [];
+    let vectorResults = [];
+    let mode = 'fallback';
 
-  try {
-    textResults = await runAtlasTextSearch(collection, {
-      query,
-      domain: domainHint,
-      venue,
-      limit: env.RAG_TEXT_RESULT_LIMIT,
-    });
-    retrievalMode = 'text';
-  } catch {}
+    try {
+      textResults = await runAtlasTextSearch(collection, {
+        query,
+        domain,
+        venue,
+        limit: env.RAG_TEXT_RESULT_LIMIT,
+      });
+      mode = 'text';
+    } catch {}
 
-  try {
-    vectorResults = await runAtlasVectorSearch(collection, {
-      query,
-      domain: domainHint,
-      venue,
-      limit: env.RAG_VECTOR_RESULT_LIMIT,
-      numCandidates: env.RAG_VECTOR_CANDIDATES,
-    });
-    retrievalMode = textResults.length > 0 ? 'hybrid' : 'vector';
-  } catch {}
+    try {
+      vectorResults = await runAtlasVectorSearch(collection, {
+        query,
+        domain,
+        venue,
+        limit: env.RAG_VECTOR_RESULT_LIMIT,
+        numCandidates: env.RAG_VECTOR_CANDIDATES,
+      });
+      mode = textResults.length > 0 ? 'hybrid' : 'vector';
+    } catch {}
 
-  if (textResults.length === 0 && vectorResults.length === 0) {
-    textResults = await runFallbackSearch(collection, {
-      query,
-      domain: domainHint,
-      venue,
-      limit: env.RAG_TEXT_RESULT_LIMIT,
-    });
+    if (textResults.length === 0 && vectorResults.length === 0) {
+      textResults = await runFallbackSearch(collection, {
+        query,
+        domain,
+        venue,
+        limit: env.RAG_TEXT_RESULT_LIMIT,
+      });
+    }
+
+    return { textResults, vectorResults, mode };
+  };
+
+  let { textResults, vectorResults, mode: retrievalMode } = await runRetrieval(domainHint);
+
+  // Domain inference is heuristic - if the filtered search misses, retry without
+  // the domain filter so user-authored scripts (e.g. 补偿金) saved under a different
+  // domain can still surface.
+  if (domainHint && textResults.length === 0 && vectorResults.length === 0) {
+    const relaxed = await runRetrieval(null);
+    textResults = relaxed.textResults;
+    vectorResults = relaxed.vectorResults;
+    if (textResults.length > 0 || vectorResults.length > 0) {
+      retrievalMode = `${relaxed.mode}+nodomain`;
+    }
   }
 
   const results = mergeHybridResults(textResults, vectorResults, limit);
